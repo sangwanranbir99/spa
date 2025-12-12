@@ -30,7 +30,7 @@ const Sidebar = () => {
     },
     {
       title: 'Users',
-      path: '/dashboard/users',
+      path: '/dashboard/employees',
       icon: <Users className="w-5 h-5" />,
       access: ['admin', 'manager']
     },

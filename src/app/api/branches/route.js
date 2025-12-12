@@ -18,6 +18,10 @@ export async function GET(req) {
             branches = await Branch.find();
         } else if (user.role === 'manager' || user.role === 'employee') {
             // Manager and Employee can only see their assigned branches
+            if (!user.branches || user.branches.length === 0) {
+                console.warn(`User ${user._id} (${user.role}) has no branches assigned`);
+                return NextResponse.json([]);
+            }
             const branchIds = user.branches.map(b => b._id || b);
             branches = await Branch.find({ _id: { $in: branchIds } });
         } else {
@@ -27,6 +31,7 @@ export async function GET(req) {
             );
         }
 
+        console.log(`Returning ${branches.length} branches for user role: ${user.role}`);
         return NextResponse.json(branches);
 
     } catch (error) {
