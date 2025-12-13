@@ -7,7 +7,11 @@ import {
   LayoutDashboard,
   Users,
   Building2,
-  Settings
+  Sparkles,
+  Settings,
+  CalendarPlus,
+  Calendar,
+  UserCircle
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -33,6 +37,30 @@ const Sidebar = () => {
       path: '/dashboard/employees',
       icon: <Users className="w-5 h-5" />,
       access: ['admin', 'manager']
+    },
+    {
+      title: 'Massages',
+      path: '/dashboard/massages',
+      icon: <Sparkles className="w-5 h-5" />,
+      access: ['admin', 'manager', 'employee']
+    },
+    {
+      title: 'Create Booking',
+      path: '/dashboard/bookings',
+      icon: <CalendarPlus className="w-5 h-5" />,
+      access: ['admin', 'manager', 'employee']
+    },
+    {
+      title: 'All Bookings',
+      path: '/dashboard/bookings/all',
+      icon: <Calendar className="w-5 h-5" />,
+      access: ['admin', 'manager', 'employee']
+    },
+    {
+      title: 'Clients',
+      path: '/dashboard/clients',
+      icon: <UserCircle className="w-5 h-5" />,
+      access: ['admin', 'manager', 'employee']
     },
     {
       title: 'Settings',

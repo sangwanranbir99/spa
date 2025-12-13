@@ -16,7 +16,8 @@ const BranchesPage = () => {
     contactNumber: '',
     email: '',
     status: true,
-    notes: ''
+    notes: '',
+    roomCount: 0
   });
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -100,7 +101,8 @@ const BranchesPage = () => {
       contactNumber: branch.contactNumber || '',
       email: branch.email || '',
       status: branch.status,
-      notes: branch.notes || ''
+      notes: branch.notes || '',
+      roomCount: branch.roomCount || 0
     });
     setShowModal(true);
   };
@@ -135,7 +137,8 @@ const BranchesPage = () => {
       contactNumber: '',
       email: '',
       status: true,
-      notes: ''
+      notes: '',
+      roomCount: 0
     });
     setEditingBranch(null);
     setError('');
@@ -213,6 +216,7 @@ const BranchesPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Branch Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Code</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Rooms</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Status</th>
                 {canCreateEdit && (
                   <th className="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Actions</th>
@@ -222,7 +226,7 @@ const BranchesPage = () => {
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {filteredBranches.length === 0 ? (
                 <tr>
-                  <td colSpan={canCreateEdit ? 5 : 4} className="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={canCreateEdit ? 6 : 5} className="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
                     No branches found
                   </td>
                 </tr>
@@ -237,6 +241,9 @@ const BranchesPage = () => {
                     <td className="px-6 py-4">
                       <div className="text-sm text-zinc-900 dark:text-zinc-50">{branch.contactNumber}</div>
                       <div className="text-sm text-zinc-500 dark:text-zinc-400">{branch.email}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-900 dark:text-zinc-50">
+                      {branch.roomCount || 0} {branch.roomCount === 1 ? 'room' : 'rooms'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -373,6 +380,25 @@ const BranchesPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-50 text-zinc-900 dark:text-zinc-50"
                 />
+              </div>
+
+              {/* Room Count */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-2">
+                  Number of Rooms
+                </label>
+                <input
+                  type="number"
+                  name="roomCount"
+                  value={formData.roomCount}
+                  onChange={handleInputChange}
+                  min="0"
+                  className="w-full px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-50 text-zinc-900 dark:text-zinc-50"
+                  placeholder="e.g., 5"
+                />
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                  Rooms will be numbered 1, 2, 3, etc.
+                </p>
               </div>
 
               <div className="flex items-center">

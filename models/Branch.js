@@ -33,6 +33,11 @@ const branchSchema = new mongoose.Schema({
     notes: {
         type: String,
         trim: true
+    },
+    roomCount: {
+        type: Number,
+        default: 0,
+        min: 0
     }
 }, { timestamps: true });
 

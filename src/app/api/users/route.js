@@ -11,17 +11,37 @@ export async function GET(req) {
 
         const user = await authMiddleware(req);
 
+        // Get branchId from query params
+        const { searchParams } = new URL(req.url);
+        const branchId = searchParams.get('branchId');
+
+        let query = {};
         let users;
 
         if (user.role === 'admin') {
-            // Admin can see all users
-            users = await User.find().select('-password').populate('branches');
+            // Admin can see all users or filter by branch
+            if (branchId && branchId !== 'null') {
+                query.branches = branchId;
+            }
+            users = await User.find(query).select('-password').populate('branches');
         } else if (user.role === 'manager') {
             // Manager can see users in their branch
             const branchIds = user.branches.map(b => b._id || b);
-            users = await User.find({
-                branches: { $in: branchIds }
-            }).select('-password').populate('branches');
+
+            // If branchId is provided, verify manager has access to it
+            if (branchId && branchId !== 'null') {
+                if (!branchIds.some(id => id.toString() === branchId)) {
+                    return NextResponse.json(
+                        { message: 'You do not have access to this branch' },
+                        { status: 403 }
+                    );
+                }
+                query.branches = branchId;
+            } else {
+                query.branches = { $in: branchIds };
+            }
+
+            users = await User.find(query).select('-password').populate('branches');
         } else {
             return NextResponse.json(
                 { message: 'Unauthorized' },
@@ -29,7 +49,7 @@ export async function GET(req) {
             );
         }
 
-        return NextResponse.json(users);
+        return NextResponse.json({ users });
 
     } catch (error) {
         console.error('Get users error:', error);
