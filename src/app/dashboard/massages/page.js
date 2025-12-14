@@ -9,18 +9,19 @@ import { Plus, Search } from 'lucide-react';
 
 const MassagesPage = () => {
   const router = useRouter();
-  const { selectedBranch, getBranchId, mounted } = useBranch();
+  const {
+    selectedBranch,
+    branchMassages,
+    isLoadingBranchData,
+    refreshBranchData,
+    mounted
+  } = useBranch();
 
-  const [massages, setMassages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingMassage, setEditingMassage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [role, setRole] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
     // Check authentication
@@ -35,95 +36,27 @@ const MassagesPage = () => {
     setRole(userRole);
   }, [router]);
 
-  useEffect(() => {
-    if (mounted && role) {
-      fetchMassages();
+  // Filter massages based on search term (client-side filtering)
+  const filteredMassages = React.useMemo(() => {
+    if (!searchTerm.trim()) {
+      return branchMassages;
     }
-  }, [selectedBranch, mounted, role]);
-
-  // Cleanup search timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-    };
-  }, [searchTimeout]);
-
-  const fetchMassages = async (searchQuery = '', isSearching = false) => {
-    if (!role) return;
-
-    try {
-      // Use different loading state based on whether it's a search or initial load
-      if (isSearching) {
-        setSearching(true);
-      } else {
-        setLoading(true);
-      }
-
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
-      // Get branch ID for filtering
-      const branchId = getBranchId();
-      const branchParam = branchId ? `branchId=${branchId}` : '';
-      const searchParam = searchQuery ? `name=${encodeURIComponent(searchQuery)}` : '';
-
-      const params = [branchParam, searchParam].filter(p => p).join('&');
-      const queryString = params ? `?${params}` : '';
-
-      const response = await fetch(`/api/massages${queryString}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch massages');
-      }
-
-      const data = await response.json();
-      setMassages(data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching massages:', error);
-      setError('Failed to load massages. Please try again later.');
-    } finally {
-      if (isSearching) {
-        setSearching(false);
-      } else {
-        setLoading(false);
-      }
-    }
-  };
+    return branchMassages.filter(massage =>
+      massage.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [branchMassages, searchTerm]);
 
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-
-    // Clear existing timeout
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    // Set new timeout for debounced search (300ms delay)
-    const newTimeout = setTimeout(() => {
-      fetchMassages(value, true); // Pass true to indicate it's a search
-    }, 300);
-
-    setSearchTimeout(newTimeout);
+    setSearchTerm(e.target.value);
   };
 
   const handleMassageAdded = () => {
-    fetchMassages(searchTerm);
+    refreshBranchData();
     setShowModal(false);
   };
 
   const handleMassageUpdated = () => {
-    fetchMassages(searchTerm);
+    refreshBranchData();
     setShowModal(false);
     setEditingMassage(null);
     setIsEditing(false);
@@ -147,10 +80,9 @@ const MassagesPage = () => {
     setIsEditing(false);
   };
 
-  const handleStatusChange = (massageId, newStatus) => {
-    setMassages(massages.map(m =>
-      m._id === massageId ? { ...m, status: newStatus } : m
-    ));
+  const handleStatusChange = () => {
+    // Refresh data after status change
+    refreshBranchData();
   };
 
   if (!mounted || !role) {
@@ -161,7 +93,7 @@ const MassagesPage = () => {
     );
   }
 
-  if (loading) {
+  if (isLoadingBranchData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-xl text-zinc-700 dark:text-zinc-300">Loading massages...</div>
@@ -194,15 +126,10 @@ const MassagesPage = () => {
               placeholder="Search massages..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="pl-10 pr-10 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 w-64"
+              className="pl-10 pr-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 w-64"
               autoComplete="off"
             />
             <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" />
-            {searching && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              </div>
-            )}
           </div>
 
           {/* Add Button - Only for admin and manager */}
@@ -218,19 +145,13 @@ const MassagesPage = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md">
-          {error}
-        </div>
-      )}
-
       <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md border border-zinc-200 dark:border-zinc-800">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-50">Massage List</h2>
           <MassageTable
-            massages={massages}
+            massages={filteredMassages}
             onStatusChange={handleStatusChange}
-            onRefreshNeeded={() => fetchMassages(searchTerm)}
+            onRefreshNeeded={refreshBranchData}
             onEditMassage={handleEditMassage}
           />
         </div>

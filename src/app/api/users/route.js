@@ -3,6 +3,7 @@ const connectDB = require('../../../../lib/db');
 const authMiddleware = require('../../../../lib/authMiddleware');
 const { checkRole, checkManagerBranchAccess } = require('../../../../lib/roleMiddleware');
 const User = require('../../../../models/User');
+const Branch = require('../../../../models/Branch');
 
 // GET all users (based on role)
 export async function GET(req) {
@@ -19,14 +20,17 @@ export async function GET(req) {
         let users;
 
         if (user.role === 'admin') {
-            // Admin can see all users or filter by branch
+            // Admin can see all users (except other admins) or filter by branch
+            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+
             if (branchId && branchId !== 'null') {
                 query.branches = branchId;
             }
             users = await User.find(query).select('-password').populate('branches');
         } else if (user.role === 'manager') {
-            // Manager can see users in their branch
+            // Manager can see users in their branch (excluding admins)
             const branchIds = user.branches.map(b => b._id || b);
+            query.role = { $ne: 'admin' }; // Exclude admin users from the list
 
             // If branchId is provided, verify manager has access to it
             if (branchId && branchId !== 'null') {

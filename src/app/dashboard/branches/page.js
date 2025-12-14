@@ -51,7 +51,7 @@ const BranchesPage = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) || 0 : value
     }));
   };
 
@@ -67,6 +67,9 @@ const BranchesPage = () => {
         : '/api/branches';
 
       const method = editingBranch ? 'PUT' : 'POST';
+
+      console.log('Submitting form data:', formData);
+      console.log('Room count:', formData.roomCount, 'Type:', typeof formData.roomCount);
 
       const response = await fetch(url, {
         method,

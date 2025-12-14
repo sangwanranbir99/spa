@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useBranch } from '@/context/BranchContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const AllBookingsPage = () => {
   const { getBranchId } = useBranch();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Get current date in YYYY-MM-DD format (IST)
   const getCurrentDate = () => {
@@ -22,17 +23,13 @@ const AllBookingsPage = () => {
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // Inline editing states
-  const [editingPayment, setEditingPayment] = useState(null);
-  const [editingPrice, setEditingPrice] = useState(null);
-  const [editingCash, setEditingCash] = useState(null);
-  const [editingCard, setEditingCard] = useState(null);
-  const [editingUPI, setEditingUPI] = useState(null);
-  const [newPaymentAmount, setNewPaymentAmount] = useState('');
-  const [newPriceAmount, setNewPriceAmount] = useState('');
-  const [newCashAmount, setNewCashAmount] = useState('');
-  const [newCardAmount, setNewCardAmount] = useState('');
-  const [newUPIAmount, setNewUPIAmount] = useState('');
+  // Check for date query parameter on mount
+  useEffect(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      setSelectedDate(dateParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -61,6 +58,15 @@ const AllBookingsPage = () => {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const fetchBookings = async (date) => {
@@ -92,7 +98,9 @@ const AllBookingsPage = () => {
     }
   };
 
-  const handleDelete = async (bookingId) => {
+  const handleDelete = async (bookingId, e) => {
+    e.stopPropagation();
+
     if (!confirm('Are you sure you want to delete this booking?')) return;
 
     try {
@@ -120,153 +128,21 @@ const AllBookingsPage = () => {
     }
   };
 
-  const handleOtherPaymentUpdate = async (bookingId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ otherPayment: parseFloat(newPaymentAmount) })
-      });
-
-      if (response.ok) {
-        await fetchBookings(selectedDate);
-        setEditingPayment(null);
-        setNewPaymentAmount('');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to update other payment');
-      }
-    } catch (err) {
-      setError('Failed to update other payment. Please try again.');
-      console.error('Error updating other payment:', err);
-    } finally {
-      setLoading(false);
-    }
+  const handleCardClick = (bookingId) => {
+    router.push(`/dashboard/bookings/${bookingId}`);
   };
 
-  const handlePriceUpdate = async (bookingId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
+  const getPaymentStatus = (booking) => {
+    const totalPayment = (booking.cash || 0) + (booking.card || 0) + (booking.upi || 0);
+    const totalPrice = (booking.massagePrice || 0) + (booking.otherPayment || 0);
+    const diff = totalPrice - totalPayment;
 
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ massagePrice: parseFloat(newPriceAmount) })
-      });
-
-      if (response.ok) {
-        await fetchBookings(selectedDate);
-        setEditingPrice(null);
-        setNewPriceAmount('');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to update price');
-      }
-    } catch (err) {
-      setError('Failed to update price. Please try again.');
-      console.error('Error updating price:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCashUpdate = async (bookingId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ cash: parseFloat(newCashAmount) })
-      });
-
-      if (response.ok) {
-        await fetchBookings(selectedDate);
-        setEditingCash(null);
-        setNewCashAmount('');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to update cash payment');
-      }
-    } catch (err) {
-      setError('Failed to update cash payment. Please try again.');
-      console.error('Error updating cash payment:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCardUpdate = async (bookingId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ card: parseFloat(newCardAmount) })
-      });
-
-      if (response.ok) {
-        await fetchBookings(selectedDate);
-        setEditingCard(null);
-        setNewCardAmount('');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to update card payment');
-      }
-    } catch (err) {
-      setError('Failed to update card payment. Please try again.');
-      console.error('Error updating card payment:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUPIUpdate = async (bookingId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ upi: parseFloat(newUPIAmount) })
-      });
-
-      if (response.ok) {
-        await fetchBookings(selectedDate);
-        setEditingUPI(null);
-        setNewUPIAmount('');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to update UPI payment');
-      }
-    } catch (err) {
-      setError('Failed to update UPI payment. Please try again.');
-      console.error('Error updating UPI payment:', err);
-    } finally {
-      setLoading(false);
+    if (Math.abs(diff) < 0.01) {
+      return { status: 'Paid', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', remaining: 0 };
+    } else if (diff > 0) {
+      return { status: 'Pending', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400', remaining: diff };
+    } else {
+      return { status: 'Overpaid', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400', remaining: Math.abs(diff) };
     }
   };
 
@@ -276,9 +152,11 @@ const AllBookingsPage = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-zinc-900 dark:text-zinc-50">All Bookings</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">All Bookings</h1>
+      </div>
 
-      {/* Date Picker - Hidden for employees */}
+      {/* Date Picker */}
       {userRole !== 'employee' && (
         <div className="mb-6">
           <label htmlFor="date" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
@@ -307,266 +185,111 @@ const AllBookingsPage = () => {
           <p className="text-gray-500 text-lg">No bookings found for this date.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white dark:bg-zinc-900 border rounded-lg">
-            <thead className="bg-gray-50 dark:bg-zinc-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Client Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Massage Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Session Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Cash</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Card</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">UPI</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Other Payment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">End Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Created By</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Room</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Staff Name</th>
-                {userRole === 'admin' && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-zinc-700">
-              {bookings.map((booking) => (
-                <tr key={booking._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking.clientName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking.clientContact}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking.massage?.name || booking.massageType}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking.sessionTime}</td>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {bookings.map((booking) => {
+            const paymentStatus = getPaymentStatus(booking);
 
-                  {/* Editable Price */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingPrice === booking._id ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={newPriceAmount}
-                          onChange={(e) => setNewPriceAmount(e.target.value)}
-                          className="w-20 p-1 border rounded dark:bg-zinc-800 dark:text-zinc-50"
-                        />
-                        <button
-                          onClick={() => handlePriceUpdate(booking._id)}
-                          className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingPrice(null);
-                            setNewPriceAmount('');
-                          }}
-                          className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-zinc-900 dark:text-zinc-50">₹{booking.massagePrice}</span>
-                        <button
-                          onClick={() => {
-                            setEditingPrice(booking._id);
-                            setNewPriceAmount(booking.massagePrice?.toString() || '');
-                          }}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                  </td>
+            return (
+              <div
+                key={booking._id}
+                onClick={() => handleCardClick(booking._id)}
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-5 hover:shadow-lg transition-shadow cursor-pointer"
+              >
+                {/* Header */}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                      {booking.clientName}
+                    </h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      {booking.clientContact}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${paymentStatus.color}`}>
+                    {paymentStatus.status}
+                  </span>
+                </div>
 
-                  {/* Editable Cash */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingCash === booking._id ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={newCashAmount}
-                          onChange={(e) => setNewCashAmount(e.target.value)}
-                          className="w-20 p-1 border rounded dark:bg-zinc-800 dark:text-zinc-50"
-                        />
-                        <button
-                          onClick={() => handleCashUpdate(booking._id)}
-                          className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingCash(null);
-                            setNewCashAmount('');
-                          }}
-                          className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-zinc-900 dark:text-zinc-50">₹{booking.cash || '0'}</span>
-                        <button
-                          onClick={() => {
-                            setEditingCash(booking._id);
-                            setNewCashAmount(booking.cash?.toString() || '0');
-                          }}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                {/* Massage Info */}
+                <div className="mb-3 pb-3 border-b border-zinc-200 dark:border-zinc-700">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    {booking.massage?.name || booking.massageType}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                    {booking.sessionTime} session
+                  </p>
+                </div>
 
-                  {/* Editable Card */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingCard === booking._id ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={newCardAmount}
-                          onChange={(e) => setNewCardAmount(e.target.value)}
-                          className="w-20 p-1 border rounded dark:bg-zinc-800 dark:text-zinc-50"
-                        />
-                        <button
-                          onClick={() => handleCardUpdate(booking._id)}
-                          className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingCard(null);
-                            setNewCardAmount('');
-                          }}
-                          className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-zinc-900 dark:text-zinc-50">₹{booking.card || '0'}</span>
-                        <button
-                          onClick={() => {
-                            setEditingCard(booking._id);
-                            setNewCardAmount(booking.card?.toString() || '0');
-                          }}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                {/* Time & Staff */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500">Time</p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {formatTime(booking.massageTime)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500">End Time</p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {formatTime(booking.massageEndTime)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500">Staff</p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {booking?.staffDetails?.name || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500">Room</p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {booking.roomNumber || 'N/A'}
+                    </p>
+                  </div>
+                </div>
 
-                  {/* Editable UPI */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingUPI === booking._id ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={newUPIAmount}
-                          onChange={(e) => setNewUPIAmount(e.target.value)}
-                          className="w-20 p-1 border rounded dark:bg-zinc-800 dark:text-zinc-50"
-                        />
-                        <button
-                          onClick={() => handleUPIUpdate(booking._id)}
-                          className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingUPI(null);
-                            setNewUPIAmount('');
-                          }}
-                          className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-zinc-900 dark:text-zinc-50">₹{booking.upi || '0'}</span>
-                        <button
-                          onClick={() => {
-                            setEditingUPI(booking._id);
-                            setNewUPIAmount(booking.upi?.toString() || '0');
-                          }}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Editable Other Payment */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingPayment === booking._id ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={newPaymentAmount}
-                          onChange={(e) => setNewPaymentAmount(e.target.value)}
-                          className="w-20 p-1 border rounded dark:bg-zinc-800 dark:text-zinc-50"
-                        />
-                        <button
-                          onClick={() => handleOtherPaymentUpdate(booking._id)}
-                          className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingPayment(null);
-                            setNewPaymentAmount('');
-                          }}
-                          className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-zinc-900 dark:text-zinc-50">₹{booking.otherPayment || '0'}</span>
-                        <button
-                          onClick={() => {
-                            setEditingPayment(booking._id);
-                            setNewPaymentAmount(booking.otherPayment?.toString() || '0');
-                          }}
-                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{formatTime(booking.massageTime)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{formatTime(booking.massageEndTime)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking.createdBy}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking.roomNumber}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-zinc-50">{booking?.staffDetails?.name}</td>
-                  {userRole === 'admin' && (
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleDelete(booking._id)}
-                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                {/* Payment Info */}
+                <div className="pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-zinc-600 dark:text-zinc-400">Total Price</span>
+                    <span className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                      ₹{(booking.massagePrice || 0) + (booking.otherPayment || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-zinc-500 dark:text-zinc-500">
+                    <span>Cash: ₹{booking.cash || 0}</span>
+                    <span>Card: ₹{booking.card || 0}</span>
+                    <span>UPI: ₹{booking.upi || 0}</span>
+                  </div>
+                  {paymentStatus.remaining > 0 && paymentStatus.status === 'Pending' && (
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                      Remaining: ₹{paymentStatus.remaining.toFixed(2)}
+                    </p>
                   )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {paymentStatus.status === 'Overpaid' && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                      Overpaid: ₹{paymentStatus.remaining.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                    By {booking.createdBy}
+                  </p>
+                  {userRole === 'admin' && (
+                    <button
+                      onClick={(e) => handleDelete(booking._id, e)}
+                      className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

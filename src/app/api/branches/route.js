@@ -59,6 +59,8 @@ export async function POST(req) {
         }
 
         const branchData = await req.json();
+        console.log('Received branch data:', branchData);
+        console.log('Room count value:', branchData.roomCount, 'Type:', typeof branchData.roomCount);
 
         // Check if branch code already exists
         const existingBranch = await Branch.findOne({ code: branchData.code });
@@ -71,6 +73,9 @@ export async function POST(req) {
 
         const branch = new Branch(branchData);
         await branch.save();
+
+        console.log('Branch saved to database:', branch);
+        console.log('Saved roomCount:', branch.roomCount);
 
         return NextResponse.json(
             { message: 'Branch created successfully', branch },

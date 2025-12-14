@@ -11,7 +11,11 @@ import {
   Settings,
   CalendarPlus,
   Calendar,
-  UserCircle
+  UserCircle,
+  BarChart3,
+  TrendingUp,
+  CalendarDays,
+  Receipt
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -61,6 +65,30 @@ const Sidebar = () => {
       path: '/dashboard/clients',
       icon: <UserCircle className="w-5 h-5" />,
       access: ['admin', 'manager', 'employee']
+    },
+    {
+      title: 'Expenses',
+      path: '/dashboard/expenses',
+      icon: <Receipt className="w-5 h-5" />,
+      access: ['admin', 'manager']
+    },
+    {
+      title: 'Booking Report',
+      path: '/dashboard/booking-report',
+      icon: <CalendarDays className="w-5 h-5" />,
+      access: ['admin']
+    },
+    {
+      title: 'Analytics',
+      path: '/dashboard/analytics',
+      icon: <BarChart3 className="w-5 h-5" />,
+      access: ['admin']
+    },
+    {
+      title: 'Employee Analytics',
+      path: '/dashboard/analytics/employee',
+      icon: <TrendingUp className="w-5 h-5" />,
+      access: ['admin']
     },
     {
       title: 'Settings',

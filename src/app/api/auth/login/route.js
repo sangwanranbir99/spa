@@ -2,6 +2,7 @@ const { NextResponse } = require('next/server');
 const jwt = require('jsonwebtoken');
 const connectDB = require('../../../../../lib/db');
 const User = require('../../../../../models/User');
+const Branch = require('../../../../../models/Branch');
 
 export async function POST(req) {
     try {

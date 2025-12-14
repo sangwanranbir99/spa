@@ -3,6 +3,7 @@ const connectDB = require('../../../../../lib/db');
 const authMiddleware = require('../../../../../lib/authMiddleware');
 const { checkRole, checkManagerBranchAccess } = require('../../../../../lib/roleMiddleware');
 const User = require('../../../../../models/User');
+const Branch = require('../../../../../models/Branch');
 
 // GET single user by ID
 export async function GET(req, { params }) {

@@ -9,11 +9,14 @@ import { Plus } from 'lucide-react';
 
 const EmployeesPage = () => {
   const router = useRouter();
-  const { selectedBranch, getBranchId, mounted } = useBranch();
+  const {
+    selectedBranch,
+    branchEmployees,
+    isLoadingBranchData,
+    refreshBranchData,
+    mounted
+  } = useBranch();
 
-  const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -38,55 +41,13 @@ const EmployeesPage = () => {
     setRole(userRole);
   }, [router]);
 
-  useEffect(() => {
-    if (mounted && role) {
-      fetchEmployees();
-    }
-  }, [selectedBranch, mounted, role]);
-
-  const fetchEmployees = async () => {
-    if (!role) return;
-
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
-      // Get branch ID for filtering
-      const branchId = getBranchId();
-      const branchParam = branchId ? `?branchId=${branchId}` : '';
-
-      const response = await fetch(`/api/employees${branchParam}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-
-      const data = await response.json();
-      setEmployees(data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setError('Failed to load users. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleEmployeeAdded = () => {
-    fetchEmployees();
+    refreshBranchData();
     setShowModal(false);
   };
 
   const handleEmployeeUpdated = () => {
-    fetchEmployees();
+    refreshBranchData();
     setShowModal(false);
     setEditingEmployee(null);
     setIsEditing(false);
@@ -110,10 +71,9 @@ const EmployeesPage = () => {
     setIsEditing(false);
   };
 
-  const handleStatusChange = (employeeId, newStatus) => {
-    setEmployees(employees.map(emp =>
-      emp._id === employeeId ? { ...emp, status: newStatus } : emp
-    ));
+  const handleStatusChange = () => {
+    // Refresh data after status change
+    refreshBranchData();
   };
 
   if (!mounted || !role) {
@@ -124,7 +84,7 @@ const EmployeesPage = () => {
     );
   }
 
-  if (loading) {
+  if (isLoadingBranchData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-xl text-zinc-700 dark:text-zinc-300">Loading users...</div>
@@ -159,19 +119,13 @@ const EmployeesPage = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md">
-          {error}
-        </div>
-      )}
-
       <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md border border-zinc-200 dark:border-zinc-800">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-50">User List</h2>
           <EmployeeTable
-            employees={employees}
+            employees={branchEmployees}
             onStatusChange={handleStatusChange}
-            onRefreshNeeded={fetchEmployees}
+            onRefreshNeeded={refreshBranchData}
             onEditEmployee={handleEditEmployee}
           />
         </div>

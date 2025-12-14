@@ -126,12 +126,18 @@ const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmplo
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    employee.role === 'manager'
+                    employee.role === 'admin'
+                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                      : employee.role === 'manager'
                       ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                   }`}
                 >
-                  {employee.role === 'manager' ? 'Manager' : 'Employee'}
+                  {employee.role === 'admin'
+                    ? 'Admin'
+                    : employee.role === 'manager'
+                    ? 'Manager'
+                    : 'Employee'}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
