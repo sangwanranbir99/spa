@@ -1,21 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useBranch } from '@/context/BranchContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-const AllBookingsPage = () => {
+// Get current date in YYYY-MM-DD format (IST)
+const getCurrentDate = () => {
+  const today = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(today.getTime() + istOffset);
+  return istTime.toISOString().split('T')[0];
+};
+
+// Separate component that uses useSearchParams
+const BookingsContent = () => {
   const { getBranchId } = useBranch();
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Get current date in YYYY-MM-DD format (IST)
-  const getCurrentDate = () => {
-    const today = new Date();
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const istTime = new Date(today.getTime() + istOffset);
-    return istTime.toISOString().split('T')[0];
-  };
 
   const [bookings, setBookings] = useState([]);
   const [selectedDate, setSelectedDate] = useState(getCurrentDate());
@@ -264,6 +265,19 @@ const AllBookingsPage = () => {
         </div>
       )}
     </div>
+  );
+};
+
+// Main page component with Suspense boundary
+const AllBookingsPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-zinc-600 dark:text-zinc-400">Loading...</div>
+      </div>
+    }>
+      <BookingsContent />
+    </Suspense>
   );
 };
 
