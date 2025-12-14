@@ -3,6 +3,7 @@ const connectDB = require('../../../../lib/db');
 const authMiddleware = require('../../../../lib/authMiddleware');
 const { checkRole, checkManagerBranchAccess } = require('../../../../lib/roleMiddleware');
 const User = require('../../../../models/User');
+const Branch = require('../../../../models/Branch');
 
 // GET all users (based on role)
 export async function GET(req) {
@@ -11,17 +12,40 @@ export async function GET(req) {
 
         const user = await authMiddleware(req);
 
+        // Get branchId from query params
+        const { searchParams } = new URL(req.url);
+        const branchId = searchParams.get('branchId');
+
+        let query = {};
         let users;
 
         if (user.role === 'admin') {
-            // Admin can see all users
-            users = await User.find().select('-password').populate('branches');
+            // Admin can see all users (except other admins) or filter by branch
+            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+
+            if (branchId && branchId !== 'null') {
+                query.branches = branchId;
+            }
+            users = await User.find(query).select('-password').populate('branches');
         } else if (user.role === 'manager') {
-            // Manager can see users in their branch
+            // Manager can see users in their branch (excluding admins)
             const branchIds = user.branches.map(b => b._id || b);
-            users = await User.find({
-                branches: { $in: branchIds }
-            }).select('-password').populate('branches');
+            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+
+            // If branchId is provided, verify manager has access to it
+            if (branchId && branchId !== 'null') {
+                if (!branchIds.some(id => id.toString() === branchId)) {
+                    return NextResponse.json(
+                        { message: 'You do not have access to this branch' },
+                        { status: 403 }
+                    );
+                }
+                query.branches = branchId;
+            } else {
+                query.branches = { $in: branchIds };
+            }
+
+            users = await User.find(query).select('-password').populate('branches');
         } else {
             return NextResponse.json(
                 { message: 'Unauthorized' },
@@ -29,7 +53,7 @@ export async function GET(req) {
             );
         }
 
-        return NextResponse.json(users);
+        return NextResponse.json({ users });
 
     } catch (error) {
         console.error('Get users error:', error);

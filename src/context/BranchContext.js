@@ -10,6 +10,15 @@ export function BranchProvider({ children }) {
   const [userBranches, setUserBranches] = useState([]);
   const [mounted, setMounted] = useState(false);
 
+  // Branch data state
+  const [branchDetails, setBranchDetails] = useState(null);
+  const [branchEmployees, setBranchEmployees] = useState([]);
+  const [branchMassages, setBranchMassages] = useState([]);
+  const [totalBranches, setTotalBranches] = useState(0);
+
+  // Loading states
+  const [isLoadingBranchData, setIsLoadingBranchData] = useState(false);
+
   useEffect(() => {
     setMounted(true);
     initializeBranches();
@@ -31,6 +40,7 @@ export function BranchProvider({ children }) {
         if (response.ok) {
           const allBranches = await response.json();
           setUserBranches(allBranches);
+          setTotalBranches(allBranches.length);
 
           // Try to load previously selected branch or default to "All Branches"
           const savedBranch = localStorage.getItem('selectedBranch');
@@ -57,6 +67,7 @@ export function BranchProvider({ children }) {
         try {
           const branches = JSON.parse(branchesData);
           setUserBranches(branches);
+          setTotalBranches(branches.length);
 
           // Auto-select their only branch
           if (role === 'manager' || role === 'employee') {
@@ -69,6 +80,76 @@ export function BranchProvider({ children }) {
           console.error('Error parsing branches:', error);
         }
       }
+    }
+  };
+
+  // Fetch branch-specific data when selectedBranch changes
+  useEffect(() => {
+    if (mounted && userRole) {
+      fetchBranchData();
+    }
+  }, [selectedBranch, mounted, userRole]);
+
+  const fetchBranchData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setIsLoadingBranchData(true);
+
+    try {
+      if (selectedBranch && selectedBranch._id) {
+        // Fetch data for specific branch using bulk endpoint
+        const response = await fetch(`/api/branches/${selectedBranch._id}/details`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setBranchDetails(data.branch);
+          setBranchEmployees(data.employees);
+          setBranchMassages(data.massages);
+        } else {
+          console.error('Error fetching branch details');
+          // Reset data on error
+          setBranchDetails(null);
+          setBranchEmployees([]);
+          setBranchMassages([]);
+        }
+      } else {
+        // Admin selected "All Branches" - fetch all data
+        setBranchDetails(null);
+
+        // Fetch all employees
+        const employeesResponse = await fetch('/api/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (employeesResponse.ok) {
+          const data = await employeesResponse.json();
+          // /api/users returns { users: [...] }, so extract the array
+          setBranchEmployees(data.users || data || []);
+        } else {
+          setBranchEmployees([]);
+        }
+
+        // Fetch all massages
+        const massagesResponse = await fetch('/api/massages', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (massagesResponse.ok) {
+          const massages = await massagesResponse.json();
+          // /api/massages returns array directly
+          setBranchMassages(Array.isArray(massages) ? massages : []);
+        } else {
+          setBranchMassages([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching branch data:', error);
+      setBranchDetails(null);
+      setBranchEmployees([]);
+      setBranchMassages([]);
+    } finally {
+      setIsLoadingBranchData(false);
     }
   };
 
@@ -97,7 +178,13 @@ export function BranchProvider({ children }) {
     return userRole === 'admin' && !selectedBranch;
   };
 
+  // Manual refresh function
+  const refreshBranchData = () => {
+    fetchBranchData();
+  };
+
   const value = {
+    // Existing
     selectedBranch,
     userRole,
     userBranches,
@@ -105,7 +192,19 @@ export function BranchProvider({ children }) {
     clearBranch,
     getBranchId,
     canSeeAllBranches,
-    mounted
+    mounted,
+
+    // New branch data
+    branchDetails,
+    branchEmployees,
+    branchMassages,
+    totalBranches,
+
+    // Loading states
+    isLoadingBranchData,
+
+    // Functions
+    refreshBranchData
   };
 
   return (

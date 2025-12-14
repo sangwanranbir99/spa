@@ -18,6 +18,10 @@ export async function GET(req) {
             branches = await Branch.find();
         } else if (user.role === 'manager' || user.role === 'employee') {
             // Manager and Employee can only see their assigned branches
+            if (!user.branches || user.branches.length === 0) {
+                console.warn(`User ${user._id} (${user.role}) has no branches assigned`);
+                return NextResponse.json([]);
+            }
             const branchIds = user.branches.map(b => b._id || b);
             branches = await Branch.find({ _id: { $in: branchIds } });
         } else {
@@ -27,6 +31,7 @@ export async function GET(req) {
             );
         }
 
+        console.log(`Returning ${branches.length} branches for user role: ${user.role}`);
         return NextResponse.json(branches);
 
     } catch (error) {
@@ -54,6 +59,8 @@ export async function POST(req) {
         }
 
         const branchData = await req.json();
+        console.log('Received branch data:', branchData);
+        console.log('Room count value:', branchData.roomCount, 'Type:', typeof branchData.roomCount);
 
         // Check if branch code already exists
         const existingBranch = await Branch.findOne({ code: branchData.code });
@@ -66,6 +73,9 @@ export async function POST(req) {
 
         const branch = new Branch(branchData);
         await branch.save();
+
+        console.log('Branch saved to database:', branch);
+        console.log('Saved roomCount:', branch.roomCount);
 
         return NextResponse.json(
             { message: 'Branch created successfully', branch },

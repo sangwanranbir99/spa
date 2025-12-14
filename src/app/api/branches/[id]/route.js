@@ -10,7 +10,7 @@ export async function GET(req, { params }) {
         await connectDB();
 
         const user = await authMiddleware(req);
-        const { id } = params;
+        const { id } = await params;
 
         // Check if user has access to this branch
         if (!checkBranchAccess(user, id)) {
@@ -46,7 +46,7 @@ export async function PUT(req, { params }) {
         await connectDB();
 
         const user = await authMiddleware(req);
-        const { id } = params;
+        const { id } = await params;
 
         // Only admin can update branches
         if (!checkRole(user, 'admin')) {
@@ -105,7 +105,7 @@ export async function DELETE(req, { params }) {
         await connectDB();
 
         const user = await authMiddleware(req);
-        const { id } = params;
+        const { id } = await params;
 
         // Only admin can delete branches
         if (!checkRole(user, 'admin')) {

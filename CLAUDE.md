@@ -298,3 +298,4 @@ const MyDashboardPage = () => {
 - Enabled in next.config.mjs (`reactCompiler: true`)
 - Provides automatic optimizations for React components
 - No manual memoization needed in most cases
+- Add to memory that the context of branch willl always be used for all the pages and functionality in future like booking massages, analytics, Client List etc. 
