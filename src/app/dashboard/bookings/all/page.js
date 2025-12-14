@@ -12,8 +12,8 @@ const getCurrentDate = () => {
   return istTime.toISOString().split('T')[0];
 };
 
-// Separate component that uses useSearchParams
-const BookingsContent = () => {
+// Separate component that uses useSearchParams - must be wrapped in Suspense
+function BookingsContent() {
   const { getBranchId } = useBranch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,9 +24,9 @@ const BookingsContent = () => {
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // Check for date query parameter on mount
+  // Check for date query parameter on mount (client-side only)
   useEffect(() => {
-    const dateParam = searchParams.get('date');
+    const dateParam = searchParams?.get('date');
     if (dateParam) {
       setSelectedDate(dateParam);
     }
@@ -266,10 +266,10 @@ const BookingsContent = () => {
       )}
     </div>
   );
-};
+}
 
 // Main page component with Suspense boundary
-const AllBookingsPage = () => {
+export default function AllBookingsPage() {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center min-h-screen">
@@ -279,6 +279,4 @@ const AllBookingsPage = () => {
       <BookingsContent />
     </Suspense>
   );
-};
-
-export default AllBookingsPage;
+}
