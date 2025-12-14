@@ -2,6 +2,7 @@ const { NextResponse } = require('next/server');
 const connectDB = require('../../../../../lib/db');
 const authMiddleware = require('../../../../../lib/authMiddleware');
 const Booking = require('../../../../../models/Booking');
+const mongoose = require('mongoose');
 
 // GET booking statistics (daily and monthly)
 export async function GET(req) {
@@ -86,7 +87,7 @@ export async function GET(req) {
         };
 
         if (branchId && branchId !== 'null') {
-            query.branch = branchId;
+            query.branch = new mongoose.Types.ObjectId(branchId);
         }
 
         // Fetch bookings

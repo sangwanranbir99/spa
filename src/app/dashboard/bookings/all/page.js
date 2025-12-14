@@ -132,20 +132,6 @@ const AllBookingsPage = () => {
     router.push(`/dashboard/bookings/${bookingId}`);
   };
 
-  const getPaymentStatus = (booking) => {
-    const totalPayment = (booking.cash || 0) + (booking.card || 0) + (booking.upi || 0);
-    const totalPrice = (booking.massagePrice || 0) + (booking.otherPayment || 0);
-    const diff = totalPrice - totalPayment;
-
-    if (Math.abs(diff) < 0.01) {
-      return { status: 'Paid', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', remaining: 0 };
-    } else if (diff > 0) {
-      return { status: 'Pending', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400', remaining: diff };
-    } else {
-      return { status: 'Overpaid', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400', remaining: Math.abs(diff) };
-    }
-  };
-
   if (!userRole) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -187,8 +173,6 @@ const AllBookingsPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {bookings.map((booking) => {
-            const paymentStatus = getPaymentStatus(booking);
-
             return (
               <div
                 key={booking._id}
@@ -205,9 +189,6 @@ const AllBookingsPage = () => {
                       {booking.clientContact}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${paymentStatus.color}`}>
-                    {paymentStatus.status}
-                  </span>
                 </div>
 
                 {/* Massage Info */}
@@ -261,16 +242,6 @@ const AllBookingsPage = () => {
                     <span>Card: ₹{booking.card || 0}</span>
                     <span>UPI: ₹{booking.upi || 0}</span>
                   </div>
-                  {paymentStatus.remaining > 0 && paymentStatus.status === 'Pending' && (
-                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                      Remaining: ₹{paymentStatus.remaining.toFixed(2)}
-                    </p>
-                  )}
-                  {paymentStatus.status === 'Overpaid' && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                      Overpaid: ₹{paymentStatus.remaining.toFixed(2)}
-                    </p>
-                  )}
                 </div>
 
                 {/* Footer */}

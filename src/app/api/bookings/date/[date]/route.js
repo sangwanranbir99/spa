@@ -2,6 +2,7 @@ const { NextResponse } = require('next/server');
 const connectDB = require('../../../../../../lib/db');
 const authMiddleware = require('../../../../../../lib/authMiddleware');
 const Booking = require('../../../../../../models/Booking');
+const mongoose = require('mongoose');
 
 // GET bookings by date
 export async function GET(req, { params }) {
@@ -26,7 +27,7 @@ export async function GET(req, { params }) {
     // Branch filtering
     if (user.role === 'admin') {
       if (branchId && branchId !== 'null') {
-        query.branch = branchId;
+        query.branch = new mongoose.Types.ObjectId(branchId);
       }
     } else {
       const userBranchIds = user.branches.map(b => b._id || b);
@@ -37,7 +38,7 @@ export async function GET(req, { params }) {
             { status: 403 }
           );
         }
-        query.branch = branchId;
+        query.branch = new mongoose.Types.ObjectId(branchId);
       } else {
         query.branch = { $in: userBranchIds };
       }

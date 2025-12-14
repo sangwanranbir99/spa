@@ -4,6 +4,7 @@ const authMiddleware = require('../../../../lib/authMiddleware');
 const Booking = require('../../../../models/Booking');
 const Client = require('../../../../models/Client');
 const Massage = require('../../../../models/Massage');
+const mongoose = require('mongoose');
 
 // GET all bookings (filtered by branch and date)
 export async function GET(req) {
@@ -21,7 +22,7 @@ export async function GET(req) {
     if (user.role === 'admin') {
       // Admin can see bookings from selected branch or all branches
       if (branchId && branchId !== 'null') {
-        query.branch = branchId;
+        query.branch = new mongoose.Types.ObjectId(branchId);
       }
     } else {
       // Manager and employee see bookings from their assigned branches
@@ -34,7 +35,7 @@ export async function GET(req) {
             { status: 403 }
           );
         }
-        query.branch = branchId;
+        query.branch = new mongoose.Types.ObjectId(branchId);
       } else {
         query.branch = { $in: userBranchIds };
       }
@@ -89,17 +90,6 @@ export async function POST(req) {
       roomNumber,
       branch
     } = body;
-
-    // Validate payment: cash + card + upi should equal massagePrice + otherPayment
-    const totalPayment = parseFloat(cash) + parseFloat(card) + parseFloat(upi);
-    const expectedTotal = parseFloat(massagePrice) + parseFloat(otherPayment);
-
-    if (Math.abs(totalPayment - expectedTotal) > 0.01) {
-      return NextResponse.json(
-        { message: `Payment validation failed: Cash + Card + UPI (₹${totalPayment}) must equal Massage Price + Other Payment (₹${expectedTotal})` },
-        { status: 400 }
-      );
-    }
 
     // Check branch access
     if (user.role !== 'admin') {

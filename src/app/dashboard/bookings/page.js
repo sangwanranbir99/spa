@@ -24,6 +24,31 @@ const CreateBookingPage = () => {
     return `${hours}:${minutes}`;
   };
 
+  // Helper function to convert 24-hour time to 12-hour format
+  const convertTo12Hour = (time24) => {
+    if (!time24) return { time: '', period: 'AM' };
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    return {
+      time: `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`,
+      period
+    };
+  };
+
+  // Helper function to convert 12-hour time to 24-hour format
+  const convertTo24Hour = (time12, period) => {
+    if (!time12) return '';
+    const [hours, minutes] = time12.split(':').map(Number);
+    let hours24 = hours;
+    if (period === 'PM' && hours !== 12) {
+      hours24 = hours + 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours24 = 0;
+    }
+    return `${String(hours24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
   const [formData, setFormData] = useState({
     clientName: '',
     clientContact: '',
@@ -47,9 +72,13 @@ const CreateBookingPage = () => {
   const [clientBookings, setClientBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [selectedMassageData, setSelectedMassageData] = useState(null);
-  const [paymentError, setPaymentError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
+
+  // State for 12-hour time display
+  const initialTime12 = convertTo12Hour(getCurrentTime());
+  const [massageTime12, setMassageTime12] = useState(initialTime12.time);
+  const [timePeriod, setTimePeriod] = useState(initialTime12.period);
 
   useEffect(() => {
     fetchEmployees();
@@ -234,9 +263,32 @@ const CreateBookingPage = () => {
     }
   };
 
+  const handleTimeChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'massageTime12') {
+      setMassageTime12(value);
+      // Convert to 24-hour and update formData
+      const time24 = convertTo24Hour(value, timePeriod);
+      setFormData(prev => ({
+        ...prev,
+        massageTime: time24,
+        massageEndTime: calculateEndTime(time24, prev.sessionTime)
+      }));
+    } else if (name === 'timePeriod') {
+      setTimePeriod(value);
+      // Convert to 24-hour and update formData
+      const time24 = convertTo24Hour(massageTime12, value);
+      setFormData(prev => ({
+        ...prev,
+        massageTime: time24,
+        massageEndTime: calculateEndTime(time24, prev.sessionTime)
+      }));
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setPaymentError('');
 
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
@@ -248,7 +300,7 @@ const CreateBookingPage = () => {
           // Set first session as default
           if (selectedMassage.time && selectedMassage.time.length > 0) {
             const firstSessionIndex = 0;
-            newData.sessionTime = `${selectedMassage.time[firstSessionIndex]}MIN+15MIN`;
+            newData.sessionTime = selectedMassage.time[firstSessionIndex];
             newData.massageType = selectedMassage.name;
             newData.massagePrice = selectedMassage.discountedPrice[firstSessionIndex] || 0;
             newData.massageEndTime = calculateEndTime(newData.massageTime, newData.sessionTime);
@@ -259,14 +311,10 @@ const CreateBookingPage = () => {
       }
 
       if (name === 'sessionTime' && selectedMassageData) {
-        // Extract the massage duration from session time
-        const durationMatch = value.match(/^(\d+)MIN/);
-        if (durationMatch) {
-          const duration = parseInt(durationMatch[1]);
-          const sessionIndex = selectedMassageData.time.indexOf(duration);
-          if (sessionIndex !== -1) {
-            newData.massagePrice = selectedMassageData.discountedPrice[sessionIndex] || 0;
-          }
+        // Find the session index based on the selected session time
+        const sessionIndex = selectedMassageData.time.indexOf(value);
+        if (sessionIndex !== -1) {
+          newData.massagePrice = selectedMassageData.discountedPrice[sessionIndex] || 0;
         }
         newData.massageEndTime = calculateEndTime(newData.massageTime, value);
       }
@@ -283,28 +331,10 @@ const CreateBookingPage = () => {
     });
   };
 
-  const validatePayment = () => {
-    const totalPayment = parseFloat(formData.cash) + parseFloat(formData.card) + parseFloat(formData.upi);
-    const expectedTotal = parseFloat(formData.massagePrice) + parseFloat(formData.otherPayment);
-
-    if (Math.abs(totalPayment - expectedTotal) > 0.01) {
-      setPaymentError(`Payment Error: Cash + Card + UPI (₹${totalPayment}) must equal Massage Price + Other Payment (₹${expectedTotal})`);
-      return false;
-    }
-
-    setPaymentError('');
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
-
-    // Validate payment
-    if (!validatePayment()) {
-      return;
-    }
 
     try {
       const token = localStorage.getItem('token');
@@ -335,13 +365,20 @@ const CreateBookingPage = () => {
 
       if (response.ok) {
         setSuccessMessage('Booking created successfully!');
+
+        // Show alert popup
+        alert('Booking created successfully!');
+
         // Reset form
+        const resetTime = getCurrentTime();
+        const resetTime12 = convertTo12Hour(resetTime);
+
         setFormData({
           clientName: '',
           clientContact: '',
           massage: '',
           massageDate: getCurrentDate(),
-          massageTime: getCurrentTime(),
+          massageTime: resetTime,
           massageEndTime: '',
           sessionTime: '',
           massageType: '',
@@ -353,6 +390,11 @@ const CreateBookingPage = () => {
           otherPayment: 0,
           roomNumber: ''
         });
+
+        // Reset 12-hour time state
+        setMassageTime12(resetTime12.time);
+        setTimePeriod(resetTime12.period);
+
         setClientBookings([]);
         setSelectedMassageData(null);
 
@@ -379,12 +421,6 @@ const CreateBookingPage = () => {
       {error && (
         <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg">
           {error}
-        </div>
-      )}
-
-      {paymentError && (
-        <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-semibold">
-          {paymentError}
         </div>
       )}
 
@@ -445,8 +481,8 @@ const CreateBookingPage = () => {
             >
               <option value="">Select Session</option>
               {selectedMassageData && selectedMassageData.time.map((time, index) => (
-                <option key={index} value={`${time}MIN+15MIN`}>
-                  {time}MIN+15MIN - ₹{selectedMassageData.discountedPrice[index]}
+                <option key={index} value={time}>
+                  {time} - ₹{selectedMassageData.discountedPrice[index]}
                 </option>
               ))}
             </select>
@@ -484,14 +520,26 @@ const CreateBookingPage = () => {
 
           <div>
             <label className="block mb-2 text-zinc-900 dark:text-zinc-50">Start Time *</label>
-            <input
-              type="time"
-              name="massageTime"
-              value={formData.massageTime}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
-              required
-            />
+            <div className="flex gap-2">
+              <input
+                type="time"
+                name="massageTime12"
+                value={massageTime12}
+                onChange={handleTimeChange}
+                className="flex-1 p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
+                required
+              />
+              <select
+                name="timePeriod"
+                value={timePeriod}
+                onChange={handleTimeChange}
+                className="p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
+                required
+              >
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
           </div>
 
           <div>
@@ -543,7 +591,6 @@ const CreateBookingPage = () => {
               name="cash"
               value={formData.cash}
               onChange={handleInputChange}
-              onBlur={validatePayment}
               className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
               min="0"
               step="0.01"
@@ -557,7 +604,6 @@ const CreateBookingPage = () => {
               name="card"
               value={formData.card}
               onChange={handleInputChange}
-              onBlur={validatePayment}
               className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
               min="0"
               step="0.01"
@@ -571,7 +617,6 @@ const CreateBookingPage = () => {
               name="upi"
               value={formData.upi}
               onChange={handleInputChange}
-              onBlur={validatePayment}
               className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
               min="0"
               step="0.01"
@@ -585,7 +630,6 @@ const CreateBookingPage = () => {
               name="otherPayment"
               value={formData.otherPayment}
               onChange={handleInputChange}
-              onBlur={validatePayment}
               className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
               min="0"
               step="0.01"

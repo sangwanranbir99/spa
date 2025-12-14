@@ -3,6 +3,7 @@ const connectDB = require('../../../../../../lib/db');
 const authMiddleware = require('../../../../../../lib/authMiddleware');
 const Booking = require('../../../../../../models/Booking');
 const User = require('../../../../../../models/User');
+const mongoose = require('mongoose');
 
 // GET employee booking statistics
 export async function GET(req) {
@@ -59,8 +60,8 @@ export async function GET(req) {
 
         // Add branch filter if provided
         if (branchId && branchId !== 'null') {
-            dailyMatch.branch = branchId;
-            monthlyMatch.branch = branchId;
+            dailyMatch.branch = new mongoose.Types.ObjectId(branchId);
+            monthlyMatch.branch = new mongoose.Types.ObjectId(branchId);
         }
 
         // Build pipelines

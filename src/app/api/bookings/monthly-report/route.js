@@ -3,6 +3,7 @@ const connectDB = require('../../../../../lib/db');
 const authMiddleware = require('../../../../../lib/authMiddleware');
 const { checkRole } = require('../../../../../lib/roleMiddleware');
 const Booking = require('../../../../../models/Booking');
+const mongoose = require('mongoose');
 
 export async function GET(req) {
   try {
@@ -52,7 +53,7 @@ export async function GET(req) {
 
     // Add branch filter if branchId is provided (for admin branch filtering)
     if (branchId && branchId !== 'null') {
-      matchQuery.branch = branchId;
+      matchQuery.branch = new mongoose.Types.ObjectId(branchId);
     }
 
     // Aggregate bookings by date

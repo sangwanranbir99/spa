@@ -76,23 +76,6 @@ export async function PUT(req, { params }) {
       }
     }
 
-    // Payment validation if payment fields are being updated
-    const cash = updateData.cash !== undefined ? parseFloat(updateData.cash) : booking.cash;
-    const card = updateData.card !== undefined ? parseFloat(updateData.card) : booking.card;
-    const upi = updateData.upi !== undefined ? parseFloat(updateData.upi) : booking.upi;
-    const massagePrice = updateData.massagePrice !== undefined ? parseFloat(updateData.massagePrice) : booking.massagePrice;
-    const otherPayment = updateData.otherPayment !== undefined ? parseFloat(updateData.otherPayment) : booking.otherPayment;
-
-    const totalPayment = cash + card + upi;
-    const expectedTotal = massagePrice + otherPayment;
-
-    if (Math.abs(totalPayment - expectedTotal) > 0.01) {
-      return NextResponse.json(
-        { message: `Payment validation failed: Cash + Card + UPI (₹${totalPayment}) must equal Massage Price + Other Payment (₹${expectedTotal})` },
-        { status: 400 }
-      );
-    }
-
     // Track changes for update history
     const changes = [];
     const trackableFields = [

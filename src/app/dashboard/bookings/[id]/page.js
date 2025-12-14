@@ -88,37 +88,6 @@ const BookingDetailsPage = ({ params }) => {
     }
   };
 
-  const getPaymentStatus = () => {
-    if (!booking) return { status: 'Unknown', color: 'bg-zinc-100', textColor: 'text-zinc-700' };
-
-    const totalPayment = (booking.cash || 0) + (booking.card || 0) + (booking.upi || 0);
-    const totalPrice = (booking.massagePrice || 0) + (booking.otherPayment || 0);
-    const diff = totalPrice - totalPayment;
-
-    if (Math.abs(diff) < 0.01) {
-      return {
-        status: 'Fully Paid',
-        color: 'bg-green-100 dark:bg-green-900/30',
-        textColor: 'text-green-700 dark:text-green-400',
-        remaining: 0
-      };
-    } else if (diff > 0) {
-      return {
-        status: 'Pending',
-        color: 'bg-yellow-100 dark:bg-yellow-900/30',
-        textColor: 'text-yellow-700 dark:text-yellow-400',
-        remaining: diff
-      };
-    } else {
-      return {
-        status: 'Overpaid',
-        color: 'bg-blue-100 dark:bg-blue-900/30',
-        textColor: 'text-blue-700 dark:text-blue-400',
-        remaining: Math.abs(diff)
-      };
-    }
-  };
-
   const handleUpdateSuccess = (updatedBooking) => {
     setBooking(updatedBooking);
     fetchBookingDetails();
@@ -146,7 +115,6 @@ const BookingDetailsPage = ({ params }) => {
     );
   }
 
-  const paymentStatus = getPaymentStatus();
   const totalPayment = (booking.cash || 0) + (booking.card || 0) + (booking.upi || 0);
   const totalPrice = (booking.massagePrice || 0) + (booking.otherPayment || 0);
 
@@ -173,30 +141,6 @@ const BookingDetailsPage = ({ params }) => {
             </button>
           )}
         </div>
-      </div>
-
-      {/* Payment Summary Card */}
-      <div className={`${paymentStatus.color} rounded-lg p-6 mb-6 border-l-4 ${paymentStatus.textColor.replace('text-', 'border-')}`}>
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm font-medium opacity-75">Payment Status</p>
-            <p className={`text-2xl font-bold ${paymentStatus.textColor}`}>{paymentStatus.status}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-medium opacity-75">Total Amount</p>
-            <p className={`text-2xl font-bold ${paymentStatus.textColor}`}>₹{totalPrice.toFixed(2)}</p>
-          </div>
-        </div>
-        {paymentStatus.remaining > 0 && paymentStatus.status === 'Pending' && (
-          <div className="mt-4 pt-4 border-t border-current opacity-50">
-            <p className="text-sm">Remaining Balance: <span className="font-bold">₹{paymentStatus.remaining.toFixed(2)}</span></p>
-          </div>
-        )}
-        {paymentStatus.status === 'Overpaid' && (
-          <div className="mt-4 pt-4 border-t border-current opacity-50">
-            <p className="text-sm">Overpaid Amount: <span className="font-bold">₹{paymentStatus.remaining.toFixed(2)}</span></p>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

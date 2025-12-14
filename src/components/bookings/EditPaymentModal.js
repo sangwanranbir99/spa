@@ -42,21 +42,8 @@ const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
     return formData.massagePrice + formData.otherPayment;
   };
 
-  const getBalance = () => {
-    return getTotalPrice() - getTotalPayment();
-  };
-
-  const isValid = () => {
-    return Math.abs(getBalance()) < 0.01;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!isValid()) {
-      setError(`Payment mismatch: Total payments (₹${getTotalPayment()}) must equal total price (₹${getTotalPrice()})`);
-      return;
-    }
 
     try {
       setLoading(true);
@@ -208,33 +195,6 @@ const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
               </div>
             </div>
 
-            {/* Balance Indicator */}
-            <div className="mb-6">
-              {getBalance() > 0.01 && (
-                <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-lg">
-                  <p className="font-semibold">Remaining Balance: ₹{getBalance().toFixed(2)}</p>
-                  <p className="text-sm">Please adjust payment methods to match the total price.</p>
-                </div>
-              )}
-              {getBalance() < -0.01 && (
-                <div className="p-4 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-lg">
-                  <p className="font-semibold">Overpaid: ₹{Math.abs(getBalance()).toFixed(2)}</p>
-                  <p className="text-sm">Payment exceeds the total price.</p>
-                </div>
-              )}
-              {isValid() && (
-                <div className="p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg">
-                  <p className="font-semibold flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Payment Balanced
-                  </p>
-                  <p className="text-sm">Total payment matches the total price.</p>
-                </div>
-              )}
-            </div>
-
             {/* Action Buttons */}
             <div className="flex justify-end space-x-3">
               <button
@@ -248,11 +208,11 @@ const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
               <button
                 type="submit"
                 className={`px-6 py-3 rounded-lg text-white font-semibold transition-colors ${
-                  isValid() && !loading
+                  !loading
                     ? 'bg-blue-600 hover:bg-blue-700'
                     : 'bg-zinc-400 dark:bg-zinc-600 cursor-not-allowed'
                 }`}
-                disabled={!isValid() || loading}
+                disabled={loading}
               >
                 {loading ? 'Updating...' : 'Update Payment'}
               </button>
