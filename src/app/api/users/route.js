@@ -26,7 +26,7 @@ export async function GET(req) {
             if (branchId && branchId !== 'null') {
                 query.branches = branchId;
             }
-            users = await User.find(query).select('-password').populate('branches');
+            users = await User.find(query).populate('branches');
         } else if (user.role === 'manager') {
             // Manager can see users in their branch (excluding admins)
             const branchIds = user.branches.map(b => b._id || b);

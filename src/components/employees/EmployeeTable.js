@@ -1,16 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Power, PowerOff } from 'lucide-react';
+import { Edit, Trash2, Power, PowerOff, Eye, EyeOff } from 'lucide-react';
 
 const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmployee }) => {
   const [role, setRole] = useState(null);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setRole(localStorage.getItem('role'));
     }
   }, []);
+
+  const togglePasswordVisibility = (employeeId) => {
+    setVisiblePasswords(prev => ({
+      ...prev,
+      [employeeId]: !prev[employeeId]
+    }));
+  };
 
   const handleStatusToggle = async (employeeId, currentStatus) => {
     try {
@@ -82,9 +90,11 @@ const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmplo
             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Username
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Password
-            </th>
+            {role === 'admin' && (
+              <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                Password
+              </th>
+            )}
             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Role
             </th>
@@ -118,11 +128,26 @@ const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmplo
                   {employee.username}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-zinc-700 dark:text-zinc-300 font-mono">
-                  {employee.password || '••••••••'}
-                </div>
-              </td>
+              {role === 'admin' && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center space-x-2">
+                    <div className="text-sm text-zinc-700 dark:text-zinc-300 font-mono">
+                      {visiblePasswords[employee._id] ? employee.password : '••••••••'}
+                    </div>
+                    <button
+                      onClick={() => togglePasswordVisibility(employee._id)}
+                      className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                      title={visiblePasswords[employee._id] ? 'Hide password' : 'Show password'}
+                    >
+                      {visiblePasswords[employee._id] ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </td>
+              )}
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
