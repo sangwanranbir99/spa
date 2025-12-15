@@ -64,7 +64,7 @@ const Sidebar = () => {
       title: 'Clients',
       path: '/dashboard/clients',
       icon: <UserCircle className="w-5 h-5" />,
-      access: ['admin', 'manager', 'employee']
+      access: ['admin']
     },
     {
       title: 'Expenses',

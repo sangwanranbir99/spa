@@ -14,9 +14,16 @@ const ClientsPage = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
 
     if (!token) {
       router.push('/login');
+      return;
+    }
+
+    // Only admin can access client list
+    if (role !== 'admin') {
+      router.push('/dashboard');
       return;
     }
 
