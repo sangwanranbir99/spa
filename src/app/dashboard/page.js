@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useBranch } from '@/context/BranchContext';
-import { Building2, Users, Activity } from 'lucide-react';
+import { Building2, Users, Activity, BarChart3, CalendarDays, Receipt, CalendarPlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const DashboardPage = () => {
+  const router = useRouter();
   const { selectedBranch, getBranchId, canSeeAllBranches } = useBranch();
   const [userRole, setUserRole] = useState('');
   const [userName, setUserName] = useState('');
@@ -69,37 +71,7 @@ const DashboardPage = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Branches</p>
-              <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">
-                {stats.totalBranches}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        {(userRole === 'admin' || userRole === 'manager') && (
-          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Users</p>
-                <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">
-                  {stats.totalUsers}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <Users className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </div>
-        )}
-
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -113,46 +85,102 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
         <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {userRole === 'admin' && (
             <>
-              <a
-                href="/dashboard/branches"
-                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              <button
+                onClick={() => router.push('/dashboard/analytics')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
               >
-                <Building2 className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
-                <div>
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Manage Branches</h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Create and manage branches</p>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                  <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-              </a>
-              <a
-                href="/dashboard/users"
-                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Analytics</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">View business insights</p>
+                </div>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/booking-report')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
               >
-                <Users className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
-                <div>
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Manage Users</h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Add and manage users</p>
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+                  <CalendarDays className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
-              </a>
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Monthly Report</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">View booking reports</p>
+                </div>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/expenses')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
+              >
+                <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                  <Receipt className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Expenses</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Manage expenses</p>
+                </div>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/employees')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
+              >
+                <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                  <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Users</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Manage employees</p>
+                </div>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/bookings')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
+              >
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+                  <CalendarPlus className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Create Booking</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Add new booking</p>
+                </div>
+              </button>
             </>
           )}
-          {userRole === 'manager' && (
-            <a
-              href="/dashboard/users"
-              className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <Users className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
-              <div>
-                <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Manage Employees</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">Manage your branch employees</p>
-              </div>
-            </a>
+          {(userRole === 'manager' || userRole === 'employee') && (
+            <>
+              <button
+                onClick={() => router.push('/dashboard/bookings')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
+              >
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+                  <CalendarPlus className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Create Booking</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Add new booking</p>
+                </div>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/expenses')}
+                className="flex items-center space-x-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left"
+              >
+                <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                  <Receipt className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Expense</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Record expenses</p>
+                </div>
+              </button>
+            </>
           )}
         </div>
       </div>

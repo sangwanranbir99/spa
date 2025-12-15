@@ -143,8 +143,8 @@ function BookingsContent() {
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">All Bookings</h1>
       </div>
 
-      {/* Date Picker */}
-      {userRole !== 'employee' && (
+      {/* Date Picker - Only Admin can select dates */}
+      {userRole === 'admin' && (
         <div className="mb-6">
           <label htmlFor="date" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
             Select Date

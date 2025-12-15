@@ -18,7 +18,7 @@ import {
   Receipt
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
   const pathname = usePathname();
   const role = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
 
@@ -64,7 +64,7 @@ const Sidebar = () => {
       title: 'Clients',
       path: '/dashboard/clients',
       icon: <UserCircle className="w-5 h-5" />,
-      access: ['admin', 'manager', 'employee']
+      access: ['admin']
     },
     {
       title: 'Expenses',
@@ -103,12 +103,36 @@ const Sidebar = () => {
     item.access.includes(role?.toLowerCase() || '')
   );
 
+  // For mobile, render only the navigation
+  if (isMobile) {
+    return (
+      <nav className="space-y-1 p-4">
+        {filteredMenuItems.map((item) => (
+          <Link
+            key={item.path}
+            href={item.path}
+            onClick={onLinkClick}
+            className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              pathname === item.path
+                ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
+                : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+            }`}
+          >
+            {item.icon}
+            <span className="font-medium">{item.title}</span>
+          </Link>
+        ))}
+      </nav>
+    );
+  }
+
+  // Desktop sidebar
   return (
-    <div className="w-64 min-h-screen bg-white border-r border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-      <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
+    <div className="hidden md:flex md:flex-col w-64 h-full bg-white border-r border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+      <div className="flex-shrink-0 p-6 border-b border-zinc-200 dark:border-zinc-800">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">VIP SMS</h1>
       </div>
-      <nav className="space-y-1 p-4">
+      <nav className="flex-1 overflow-y-auto space-y-1 p-4">
         {filteredMenuItems.map((item) => (
           <Link
             key={item.path}
