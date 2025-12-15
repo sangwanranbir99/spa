@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useBranch } from '@/context/BranchContext';
 import Sidebar from './Sidebar';
-import { ChevronDown, LogOut, Sun, Moon } from 'lucide-react';
+import { ChevronDown, LogOut, Sun, Moon, Menu, X } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
   const router = useRouter();
@@ -23,6 +23,7 @@ const DashboardLayout = ({ children }) => {
   const [userName, setUserName] = useState('');
   const [showBranchDropdown, setShowBranchDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   useEffect(() => {
     setThemeMounted(true);
@@ -56,18 +57,54 @@ const DashboardLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-zinc-50 dark:bg-black">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-zinc-50 dark:bg-black overflow-hidden">
+      {/* Desktop Sidebar */}
       <Sidebar />
 
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 transform transition-transform duration-300 ease-in-out md:hidden ${
+        showMobileSidebar ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between flex-shrink-0 p-6 border-b border-zinc-200 dark:border-zinc-800">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">VIP SMS</h1>
+            <button
+              onClick={() => setShowMobileSidebar(false)}
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <Sidebar isMobile={true} onLinkClick={() => setShowMobileSidebar(false)} />
+          </div>
+        </div>
+      </div>
+
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-          <div className="py-4 px-6">
+        <header className="flex-shrink-0 bg-white border-b border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="py-4 px-4 md:px-6">
             <div className="flex items-center justify-between">
-              {/* Left side - Branch Selector (only for admin and manager) */}
+              {/* Left side - Mobile Menu + Branch Selector */}
               <div className="flex items-center space-x-4">
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => setShowMobileSidebar(true)}
+                  className="md:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                >
+                  <Menu className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
+                </button>
+
                 {(userRole === 'admin' || userRole === 'manager') && userBranches.length > 0 && branchMounted && (
                   <div className="relative">
                     <button
@@ -166,8 +203,10 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-zinc-50 dark:bg-black p-6">
-          {children}
+        <main className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-black p-4 md:p-6">
+          <div className="max-w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>
