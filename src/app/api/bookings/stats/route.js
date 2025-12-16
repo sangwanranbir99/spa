@@ -4,7 +4,7 @@ const authMiddleware = require('../../../../../lib/authMiddleware');
 const Booking = require('../../../../../models/Booking');
 const mongoose = require('mongoose');
 
-// GET booking statistics (daily and monthly)
+// GET booking statistics (daily, monthly, and yearly)
 export async function GET(req) {
     try {
         await connectDB();
@@ -22,12 +22,36 @@ export async function GET(req) {
         const { searchParams } = new URL(req.url);
         const date = searchParams.get('date');
         const month = searchParams.get('month');
+        const year = searchParams.get('year');
         const branchId = searchParams.get('branchId');
 
         let startDate, endDate;
 
         // Determine date range
-        if (date && month) {
+        if (year) {
+            // Yearly stats: January 1st to current date
+            if (!year.match(/^\d{4}$/)) {
+                throw new Error('Invalid year format. Expected YYYY');
+            }
+
+            const yearNum = +year;
+            const today = new Date();
+
+            startDate = new Date(Date.UTC(yearNum, 0, 1, 0, 0, 0)); // January 1st
+
+            // If it's the current year, use today's date; otherwise use Dec 31st
+            if (today.getFullYear() === yearNum) {
+                endDate = new Date(Date.UTC(
+                    today.getFullYear(),
+                    today.getMonth(),
+                    today.getDate(),
+                    23, 59, 59
+                ));
+            } else {
+                endDate = new Date(Date.UTC(yearNum, 11, 31, 23, 59, 59)); // December 31st
+            }
+
+        } else if (date && month) {
             if (!month.match(/^\d{4}-\d{2}$/)) {
                 throw new Error('Invalid month format. Expected YYYY-MM');
             }

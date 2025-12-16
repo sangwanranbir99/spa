@@ -12,6 +12,7 @@ const AnalyticsPage = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dailyStats, setDailyStats] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
+  const [yearlyStats, setYearlyStats] = useState(null);
   const [expenseStats, setExpenseStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState(null);
@@ -78,6 +79,20 @@ const AnalyticsPage = () => {
       const monthlyData = await monthlyResponse.json();
       setMonthlyStats(monthlyData.stats);
 
+      // Fetch yearly stats (January 1st to current date)
+      const year = date.getFullYear();
+      const yearlyResponse = await fetch(
+        `/api/bookings/stats?year=${year}${branchParam}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const yearlyData = await yearlyResponse.json();
+      setYearlyStats(yearlyData.stats);
+
       // Fetch expense stats
       const expenseResponse = await fetch(
         `/api/expenses/stats?date=${selectedDate}${branchParam}`,
@@ -123,7 +138,8 @@ const AnalyticsPage = () => {
           </h2>
           <span className="text-sm text-zinc-600 dark:text-zinc-400">
             {type === 'daily' ? formatDate(selectedDate) :
-             new Date(selectedDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+             type === 'monthly' ? new Date(selectedDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) :
+             `Jan 1 - ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`}
           </span>
         </div>
 
@@ -291,8 +307,8 @@ const AnalyticsPage = () => {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Booking Statistics */}
-          <div className="grid md:grid-cols-2 gap-6">
+          {/* Daily & Monthly Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <StatsCard
               title="Daily Statistics"
               stats={dailyStats}
@@ -304,6 +320,16 @@ const AnalyticsPage = () => {
               stats={monthlyStats}
               icon={TrendingUp}
               type="monthly"
+            />
+          </div>
+
+          {/* Yearly Statistics */}
+          <div className="grid grid-cols-1 gap-6">
+            <StatsCard
+              title="Yearly Statistics"
+              stats={yearlyStats}
+              icon={TrendingUp}
+              type="yearly"
             />
           </div>
 
