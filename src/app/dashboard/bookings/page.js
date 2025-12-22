@@ -267,9 +267,20 @@ const CreateBookingPage = () => {
     const { name, value } = e.target;
 
     if (name === 'massageTime12') {
-      setMassageTime12(value);
-      // Convert to 24-hour and update formData
-      const time24 = convertTo24Hour(value, timePeriod);
+      // HTML5 time input returns 24-hour format, so we need to convert to 12-hour
+      const [hours, minutes] = value.split(':').map(Number);
+
+      // Convert to proper 12-hour format (1-12)
+      let hours12 = hours % 12 || 12;
+      let newPeriod = hours >= 12 ? 'PM' : 'AM';
+
+      const time12 = `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+      setMassageTime12(time12);
+      setTimePeriod(newPeriod);
+
+      // Convert to 24-hour for storage (this ensures valid time 00:00-23:59)
+      const time24 = convertTo24Hour(time12, newPeriod);
       setFormData(prev => ({
         ...prev,
         massageTime: time24,
@@ -662,6 +673,10 @@ const CreateBookingPage = () => {
                   <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">Massage</th>
                   <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">Staff</th>
                   <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">Price</th>
+                  <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">Other</th>
+                  <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">Cash</th>
+                  <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">Card</th>
+                  <th className="p-2 text-left text-zinc-900 dark:text-zinc-50">UPI</th>
                 </tr>
               </thead>
               <tbody>
@@ -674,6 +689,10 @@ const CreateBookingPage = () => {
                     <td className="p-2 text-zinc-900 dark:text-zinc-50">{booking.massageType}</td>
                     <td className="p-2 text-zinc-900 dark:text-zinc-50">{booking.staffDetails?.name || 'N/A'}</td>
                     <td className="p-2 text-zinc-900 dark:text-zinc-50">₹{booking.massagePrice}</td>
+                    <td className="p-2 text-zinc-900 dark:text-zinc-50">₹{booking.otherPayment || 0}</td>
+                    <td className="p-2 text-zinc-900 dark:text-zinc-50">₹{booking.cash || 0}</td>
+                    <td className="p-2 text-zinc-900 dark:text-zinc-50">₹{booking.card || 0}</td>
+                    <td className="p-2 text-zinc-900 dark:text-zinc-50">₹{booking.upi || 0}</td>
                   </tr>
                 ))}
               </tbody>
