@@ -87,7 +87,11 @@ function BookingsContent() {
       const data = await response.json();
 
       if (response.ok) {
-        setBookings(data.bookings || []);
+        // Sort bookings by creation time (latest first)
+        const sortedBookings = (data.bookings || []).sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        setBookings(sortedBookings);
       } else {
         setError(data.message || 'Failed to fetch bookings');
       }
