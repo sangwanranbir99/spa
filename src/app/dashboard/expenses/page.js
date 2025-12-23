@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useBranch } from '@/context/BranchContext';
 import ExpenseModal from '@/components/expenses/ExpenseModal';
@@ -12,7 +12,7 @@ const getTodayDate = () => {
   return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 };
 
-const ExpensesPage = () => {
+const ExpensesPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { selectedBranch, getBranchId } = useBranch();
@@ -365,4 +365,10 @@ const ExpensesPage = () => {
   );
 };
 
-export default ExpensesPage;
+export default function ExpensesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ExpensesPageContent />
+    </Suspense>
+  );
+}
