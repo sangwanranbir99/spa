@@ -46,6 +46,25 @@ export async function GET(req) {
             }
 
             users = await User.find(query).select('-password').populate('branches');
+        } else if (user.role === 'employee') {
+            // Employee can see all staff in their branch (excluding admins)
+            const branchIds = user.branches.map(b => b._id || b);
+            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+
+            // If branchId is provided, verify employee has access to it
+            if (branchId && branchId !== 'null') {
+                if (!branchIds.some(id => id.toString() === branchId)) {
+                    return NextResponse.json(
+                        { message: 'You do not have access to this branch' },
+                        { status: 403 }
+                    );
+                }
+                query.branches = branchId;
+            } else {
+                query.branches = { $in: branchIds };
+            }
+
+            users = await User.find(query).select('-password').populate('branches');
         } else {
             return NextResponse.json(
                 { message: 'Unauthorized' },
