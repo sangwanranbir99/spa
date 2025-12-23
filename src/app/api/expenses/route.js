@@ -26,10 +26,10 @@ export async function GET(req) {
 
     // If a date is provided, filter expenses for that specific date
     if (date) {
-      const startDate = new Date(date);
-      startDate.setUTCHours(0, 0, 0, 0);
-      const endDate = new Date(date);
-      endDate.setUTCHours(23, 59, 59, 999);
+      // Parse date string (YYYY-MM-DD) to avoid timezone issues
+      const [year, month, day] = date.split('-').map(Number);
+      const startDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      const endDate = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
       filter.date = { $gte: startDate, $lte: endDate };
     }
@@ -96,10 +96,14 @@ export async function POST(req) {
       );
     }
 
+    // Parse date string (YYYY-MM-DD) to create consistent UTC date
+    const [year, month, day] = date.split('-').map(Number);
+    const expenseDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0)); // Use noon UTC to avoid edge cases
+
     const expense = new Expense({
       title,
       amount,
-      date: new Date(date),
+      date: expenseDate,
       branch: branchId,
       createdBy: user.name
     });

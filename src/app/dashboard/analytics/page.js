@@ -5,11 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useBranch } from '@/context/BranchContext';
 import { Calendar, TrendingUp, DollarSign, Users, CreditCard, Smartphone, Banknote, Receipt } from 'lucide-react';
 
+// Get today's date in local timezone
+const getTodayDate = () => {
+  const today = new Date();
+  return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+};
+
 const AnalyticsPage = () => {
   const router = useRouter();
   const { selectedBranch, getBranchId, mounted } = useBranch();
 
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(''); // Initialize empty to avoid hydration mismatch
   const [dailyStats, setDailyStats] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [yearlyStats, setYearlyStats] = useState(null);
@@ -34,10 +40,11 @@ const AnalyticsPage = () => {
     }
 
     setRole(userRole);
+    setSelectedDate(getTodayDate()); // Set date on client-side to avoid hydration mismatch
   }, [router]);
 
   useEffect(() => {
-    if (mounted && role === 'admin') {
+    if (mounted && role === 'admin' && selectedDate) {
       fetchAnalytics();
     }
   }, [selectedDate, selectedBranch, mounted, role]);
@@ -258,7 +265,7 @@ const AnalyticsPage = () => {
     );
   };
 
-  if (!mounted || !role) {
+  if (!mounted || !role || !selectedDate) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-xl text-zinc-700 dark:text-zinc-300">Loading...</div>

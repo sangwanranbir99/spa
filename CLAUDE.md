@@ -97,6 +97,24 @@ All dashboard pages use `BranchContext` (`src/context/BranchContext.js`) to mana
 - Fields: name, code (unique), address, contactNumber, email, status, notes
 - Code is uppercase and unique identifier
 
+**Massage Model** (`models/Massage.js`):
+- Fields: name, description, time[], price[], discountedPrice[], branches[], status
+- Time/price/discountedPrice are parallel arrays (same index = same duration option)
+- Branches: Array of ObjectId references (massage availability per branch)
+
+**Booking Model** (`models/Booking.js`):
+- Fields: clientName, clientContact, massage (ref), massageDate, massageTime, massageEndTime, sessionTime, massageType, massagePrice, discount, staffDetails (ref to User), createdBy, cash, card, upi, otherPayment, roomNumber, branch (ref), updateHistory[]
+- Payment split across cash/card/upi/otherPayment fields
+- updateHistory tracks all changes with updatedBy, updatedAt, and field changes
+
+**Client Model** (`models/Client.js`):
+- Fields: name, phone (unique), username, visitHistory[]
+- visitHistory: Array of Booking ObjectId references
+- Phone is unique identifier for client lookup
+
+**Expense Model** (`models/Expense.js`):
+- Fields: title, amount, date, branch (ref), createdBy
+
 ### API Routes Structure
 
 All routes use Next.js App Router API conventions (`route.js` files):
@@ -119,6 +137,44 @@ All routes use Next.js App Router API conventions (`route.js` files):
 - `PUT /api/users/[id]` - Update user (role-based restrictions)
 - `DELETE /api/users/[id]` - Delete user (admin only)
 
+**Massage Routes** (`src/app/api/massages/`):
+- `GET /api/massages` - List massages (filtered by branch access)
+- `POST /api/massages` - Create massage
+- `GET /api/massages/[id]` - Get single massage
+- `PUT /api/massages/[id]` - Update massage
+- `DELETE /api/massages/[id]` - Delete massage
+
+**Booking Routes** (`src/app/api/bookings/`):
+- `GET /api/bookings` - List bookings (supports `?branchId=` and `?date=` filters)
+- `POST /api/bookings` - Create booking
+- `GET /api/bookings/[id]` - Get single booking
+- `PUT /api/bookings/[id]` - Update booking (tracks changes in updateHistory)
+- `DELETE /api/bookings/[id]` - Delete booking
+- `GET /api/bookings/date/[date]` - Get bookings for specific date
+- `GET /api/bookings/client/[phone]` - Get bookings by client phone number
+- `GET /api/bookings/stats` - Get booking statistics
+- `GET /api/bookings/stats/employee` - Get employee-wise booking stats
+- `GET /api/bookings/monthly-report` - Get monthly booking report
+
+**Client Routes** (`src/app/api/client/`):
+- `GET /api/client` - List clients
+- `POST /api/client` - Create client
+- `GET /api/client/[id]` - Get single client
+- `PUT /api/client/[id]` - Update client
+- `DELETE /api/client/[id]` - Delete client
+
+**Expense Routes** (`src/app/api/expenses/`):
+- `GET /api/expenses` - List expenses (supports `?branchId=` filter)
+- `POST /api/expenses` - Create expense
+- `GET /api/expenses/[id]` - Get single expense
+- `PUT /api/expenses/[id]` - Update expense
+- `DELETE /api/expenses/[id]` - Delete expense
+- `GET /api/expenses/stats` - Get expense statistics
+
+**Employee Routes** (`src/app/api/employees/`):
+- `GET /api/employees` - List employees (filtered by branch)
+- `GET /api/employees/[id]` - Get single employee
+
 ### Frontend Architecture
 
 **Layout Hierarchy**:
@@ -126,11 +182,18 @@ All routes use Next.js App Router API conventions (`route.js` files):
 src/app/layout.js (Root Layout with ThemeProvider)
   └─ src/app/page.js (Auto-redirects to /dashboard or /login)
   └─ src/app/login/page.js (Login form)
-  └─ src/app/dashboard/layout.js (Dashboard Layout wrapper)
+  └─ src/app/dashboard/layout.js (Dashboard Layout wrapper with BranchProvider)
       └─ DashboardLayout component (Sidebar + Header)
           └─ src/app/dashboard/page.js (Dashboard home)
           └─ src/app/dashboard/branches/page.js (Branch management)
-          └─ [other dashboard pages]
+          └─ src/app/dashboard/employees/page.js (Employee management)
+          └─ src/app/dashboard/massages/page.js (Massage services)
+          └─ src/app/dashboard/bookings/page.js (Booking management)
+          └─ src/app/dashboard/clients/page.js (Client list)
+          └─ src/app/dashboard/expenses/page.js (Expense tracking)
+          └─ src/app/dashboard/analytics/page.js (Analytics dashboard)
+          └─ src/app/dashboard/booking-report/page.js (Booking reports)
+          └─ src/app/dashboard/settings/page.js (User settings)
 ```
 
 **Key Components**:
@@ -200,6 +263,30 @@ Models must use the conditional export pattern to prevent Mongoose recompilation
 
 ```javascript
 module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+```
+
+### Populate Model Registration
+
+**CRITICAL**: When using Mongoose `.populate()` in API routes, you MUST import all referenced models in that file, even if not directly used. In Next.js serverless environment, each API route loads independently - if a model isn't imported, Mongoose won't have its schema registered and will throw:
+
+```
+Schema hasn't been registered for model "ModelName"
+```
+
+**Fix**: Import all models that are referenced via `populate()`:
+
+```javascript
+const Booking = require('../models/Booking');
+// Import models used in populate() to ensure schemas are registered
+const Massage = require('../models/Massage');
+const User = require('../models/User');
+const Branch = require('../models/Branch');
+
+// Now populate() will work
+const booking = await Booking.findById(id)
+  .populate('massage', 'name')
+  .populate('staffDetails', 'name')
+  .populate('branch', 'name code');
 ```
 
 ### Authentication Middleware Usage
@@ -298,4 +385,11 @@ const MyDashboardPage = () => {
 - Enabled in next.config.mjs (`reactCompiler: true`)
 - Provides automatic optimizations for React components
 - No manual memoization needed in most cases
-- Add to memory that the context of branch willl always be used for all the pages and functionality in future like booking massages, analytics, Client List etc. 
+
+## Branch Context Data
+
+The BranchContext also fetches and caches branch-related data:
+- `branchDetails`: Current branch information
+- `branchEmployees`: Employees for selected branch (or all employees for admin with no selection)
+- `branchMassages`: Massages available for selected branch
+- `refreshBranchData()`: Manual refresh function for data updates 

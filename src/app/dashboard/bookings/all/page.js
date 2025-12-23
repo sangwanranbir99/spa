@@ -194,6 +194,11 @@ function BookingsContent() {
                       {booking.clientContact}
                     </p>
                   </div>
+                  {booking.updateHistory && booking.updateHistory.length > 0 && (
+                    <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full font-medium">
+                      Payment Modified
+                    </span>
+                  )}
                 </div>
 
                 {/* Massage Info */}
