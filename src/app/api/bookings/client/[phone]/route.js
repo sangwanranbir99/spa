@@ -2,6 +2,10 @@ const { NextResponse } = require('next/server');
 const connectDB = require('../../../../../../lib/db');
 const authMiddleware = require('../../../../../../lib/authMiddleware');
 const Booking = require('../../../../../../models/Booking');
+// Import models used in populate() to ensure schemas are registered
+const Massage = require('../../../../../../models/Massage');
+const User = require('../../../../../../models/User');
+const Branch = require('../../../../../../models/Branch');
 
 // GET client bookings by phone (ALL branches - not filtered)
 export async function GET(req, { params }) {

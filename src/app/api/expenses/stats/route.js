@@ -3,6 +3,7 @@ const connectDB = require('../../../../../lib/db');
 const authMiddleware = require('../../../../../lib/authMiddleware');
 const { checkRole, checkBranchAccess } = require('../../../../../lib/roleMiddleware');
 const Expense = require('../../../../../models/Expense');
+const mongoose = require('mongoose');
 
 // GET expense statistics
 export async function GET(req) {
@@ -22,32 +23,39 @@ export async function GET(req) {
     const date = searchParams.get('date');
     const branchId = searchParams.get('branchId');
 
-    // Get date from query params, default to today if not provided
-    const selectedDate = date ? new Date(date) : new Date();
+    // Parse date from query params, default to today if not provided
+    let year, month, day;
+    if (date) {
+      // Parse date string (YYYY-MM-DD)
+      [year, month, day] = date.split('-').map(Number);
+    } else {
+      const today = new Date();
+      year = today.getFullYear();
+      month = today.getMonth() + 1;
+      day = today.getDate();
+    }
 
     // Set up start and end for the day (current date only)
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setUTCHours(23, 59, 59, 999);
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
     // Set up start of month to end of current day (1st to current date)
-    const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-    startOfMonth.setUTCHours(0, 0, 0, 0);
-    const endOfCurrentDay = new Date(selectedDate);
-    endOfCurrentDay.setUTCHours(23, 59, 59, 999);
+    const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+    const endOfCurrentDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
     // Build branch filter
     let branchFilter = {};
     if (user.role === 'admin') {
       // Admin can filter by specific branch or see all
       if (branchId && branchId !== 'null') {
-        branchFilter.branch = branchId;
+        branchFilter.branch = new mongoose.Types.ObjectId(branchId);
       }
     } else if (user.role === 'manager') {
       // Manager can only see their branch expenses
       if (user.branches && user.branches.length > 0) {
-        branchFilter.branch = user.branches[0]._id;
+        // Ensure ObjectId for aggregation pipeline
+        const managerBranchId = user.branches[0]._id || user.branches[0];
+        branchFilter.branch = new mongoose.Types.ObjectId(managerBranchId.toString());
       } else {
         return NextResponse.json(
           { message: 'No branch assigned to manager' },

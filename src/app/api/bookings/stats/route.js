@@ -3,6 +3,8 @@ const connectDB = require('../../../../../lib/db');
 const authMiddleware = require('../../../../../lib/authMiddleware');
 const Booking = require('../../../../../models/Booking');
 const mongoose = require('mongoose');
+// Import models used in populate() to ensure schemas are registered
+const User = require('../../../../../models/User');
 
 // GET booking statistics (daily, monthly, and yearly)
 export async function GET(req) {

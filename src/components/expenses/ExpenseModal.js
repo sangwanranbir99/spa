@@ -1,16 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBranch } from '@/context/BranchContext';
 import { X } from 'lucide-react';
 
+// Get today's date in local timezone
+const getTodayDate = () => {
+  const today = new Date();
+  return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+};
+
 const ExpenseModal = ({ isOpen, onClose, onSuccess }) => {
   const { getBranchId } = useBranch();
+
   const [formData, setFormData] = useState({
     title: '',
     amount: '',
-    date: new Date().toISOString().split('T')[0]
+    date: '' // Initialize empty to avoid hydration mismatch
   });
+  const [mounted, setMounted] = useState(false);
+
+  // Set date on client-side only to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    if (!formData.date) {
+      setFormData(prev => ({ ...prev, date: getTodayDate() }));
+    }
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,7 +60,9 @@ const ExpenseModal = ({ isOpen, onClose, onSuccess }) => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ...formData,
+          title: formData.title,
+          amount: parseFloat(formData.amount),
+          date: formData.date,
           branchId
         })
       });
@@ -56,7 +74,7 @@ const ExpenseModal = ({ isOpen, onClose, onSuccess }) => {
         setFormData({
           title: '',
           amount: '',
-          date: new Date().toISOString().split('T')[0]
+          date: getTodayDate()
         });
         onSuccess();
         onClose();

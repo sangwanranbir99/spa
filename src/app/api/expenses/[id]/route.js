@@ -18,7 +18,7 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { title, amount } = body;
 
@@ -72,7 +72,7 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const expense = await Expense.findById(id);
 

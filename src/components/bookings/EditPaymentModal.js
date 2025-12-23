@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 
 const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
   const [formData, setFormData] = useState({
-    massagePrice: 0,
-    cash: 0,
-    card: 0,
-    upi: 0,
-    otherPayment: 0
+    massagePrice: '',
+    cash: '',
+    card: '',
+    upi: '',
+    otherPayment: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,11 +16,11 @@ const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
   useEffect(() => {
     if (booking && isOpen) {
       setFormData({
-        massagePrice: booking.massagePrice || 0,
-        cash: booking.cash || 0,
-        card: booking.card || 0,
-        upi: booking.upi || 0,
-        otherPayment: booking.otherPayment || 0
+        massagePrice: booking.massagePrice ? booking.massagePrice.toString() : '',
+        cash: booking.cash ? booking.cash.toString() : '',
+        card: booking.card ? booking.card.toString() : '',
+        upi: booking.upi ? booking.upi.toString() : '',
+        otherPayment: booking.otherPayment ? booking.otherPayment.toString() : ''
       });
       setError(null);
     }
@@ -30,16 +30,16 @@ const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: parseFloat(value) || 0
+      [name]: value
     });
   };
 
   const getTotalPayment = () => {
-    return formData.cash + formData.card + formData.upi;
+    return (parseFloat(formData.cash) || 0) + (parseFloat(formData.card) || 0) + (parseFloat(formData.upi) || 0);
   };
 
   const getTotalPrice = () => {
-    return formData.massagePrice + formData.otherPayment;
+    return (parseFloat(formData.massagePrice) || 0) + (parseFloat(formData.otherPayment) || 0);
   };
 
   const handleSubmit = async (e) => {
@@ -50,13 +50,22 @@ const EditPaymentModal = ({ isOpen, onClose, booking, onUpdate }) => {
       setError(null);
       const token = localStorage.getItem('token');
 
+      // Convert string values to numbers for API
+      const paymentData = {
+        massagePrice: parseFloat(formData.massagePrice) || 0,
+        cash: parseFloat(formData.cash) || 0,
+        card: parseFloat(formData.card) || 0,
+        upi: parseFloat(formData.upi) || 0,
+        otherPayment: parseFloat(formData.otherPayment) || 0
+      };
+
       const response = await fetch(`/api/bookings/${booking._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(paymentData)
       });
 
       const data = await response.json();

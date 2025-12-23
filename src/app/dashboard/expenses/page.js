@@ -1,20 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useBranch } from '@/context/BranchContext';
 import ExpenseModal from '@/components/expenses/ExpenseModal';
 import { Plus } from 'lucide-react';
 
+// Get today's date in local timezone
+const getTodayDate = () => {
+  const today = new Date();
+  return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+};
+
 const ExpensesPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { selectedBranch, getBranchId } = useBranch();
 
   const [expenses, setExpenses] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-  });
+  const [selectedDate, setSelectedDate] = useState(''); // Initialize empty to avoid hydration mismatch
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [editingTitle, setEditingTitle] = useState(null);
@@ -23,8 +27,9 @@ const ExpensesPage = () => {
   const [newAmount, setNewAmount] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Check authentication
+  // Check authentication and initialize date on client-side
   useEffect(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
@@ -41,11 +46,21 @@ const ExpensesPage = () => {
     }
 
     setUserRole(role);
-  }, [router]);
+
+    // Check for date query parameter, otherwise use today's date
+    const dateParam = searchParams.get('date');
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      setSelectedDate(dateParam);
+    } else {
+      setSelectedDate(getTodayDate());
+    }
+
+    setMounted(true);
+  }, [router, searchParams]);
 
   // Fetch expenses when date or selected branch changes
   useEffect(() => {
-    if (userRole) {
+    if (userRole && selectedDate) {
       fetchExpenses(selectedDate);
     }
   }, [selectedDate, userRole, selectedBranch]);
@@ -171,7 +186,7 @@ const ExpensesPage = () => {
     fetchExpenses(selectedDate);
   };
 
-  if (!userRole) {
+  if (!userRole || !mounted) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
 

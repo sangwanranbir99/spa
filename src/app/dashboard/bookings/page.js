@@ -58,12 +58,12 @@ const CreateBookingPage = () => {
     massageEndTime: '',
     sessionTime: '',
     massageType: '',
-    massagePrice: 0,
+    massagePrice: '',
     staffDetails: '',
-    cash: 0,
-    card: 0,
-    upi: 0,
-    otherPayment: 0,
+    cash: '',
+    card: '',
+    upi: '',
+    otherPayment: '',
     roomNumber: ''
   });
 
@@ -301,6 +301,13 @@ const CreateBookingPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
+    // Handle phone number - only allow digits and max 10 characters
+    if (name === 'clientContact') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: digitsOnly }));
+      return;
+    }
+
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
 
@@ -313,7 +320,7 @@ const CreateBookingPage = () => {
             const firstSessionIndex = 0;
             newData.sessionTime = selectedMassage.time[firstSessionIndex];
             newData.massageType = selectedMassage.name;
-            newData.massagePrice = selectedMassage.discountedPrice[firstSessionIndex] || 0;
+            newData.massagePrice = selectedMassage.discountedPrice[firstSessionIndex] || '';
             newData.massageEndTime = calculateEndTime(newData.massageTime, newData.sessionTime);
           }
         } else {
@@ -325,7 +332,7 @@ const CreateBookingPage = () => {
         // Find the session index based on the selected session time
         const sessionIndex = selectedMassageData.time.indexOf(value);
         if (sessionIndex !== -1) {
-          newData.massagePrice = selectedMassageData.discountedPrice[sessionIndex] || 0;
+          newData.massagePrice = selectedMassageData.discountedPrice[sessionIndex] || '';
         }
         newData.massageEndTime = calculateEndTime(newData.massageTime, value);
       }
@@ -334,8 +341,10 @@ const CreateBookingPage = () => {
         newData.massageEndTime = calculateEndTime(value, newData.sessionTime);
       }
 
+      // Handle payment fields - allow empty string, store as string for display
       if (['massagePrice', 'cash', 'card', 'upi', 'otherPayment'].includes(name)) {
-        newData[name] = parseFloat(value) || 0;
+        // Allow empty string or valid number
+        newData[name] = value;
       }
 
       return newData;
@@ -357,8 +366,14 @@ const CreateBookingPage = () => {
         return;
       }
 
+      // Convert payment fields to numbers (empty string becomes 0)
       const bookingData = {
         ...formData,
+        massagePrice: parseFloat(formData.massagePrice) || 0,
+        cash: parseFloat(formData.cash) || 0,
+        card: parseFloat(formData.card) || 0,
+        upi: parseFloat(formData.upi) || 0,
+        otherPayment: parseFloat(formData.otherPayment) || 0,
         branch: branchId,
         createdBy: userName
       };
@@ -393,12 +408,12 @@ const CreateBookingPage = () => {
           massageEndTime: '',
           sessionTime: '',
           massageType: '',
-          massagePrice: 0,
+          massagePrice: '',
           staffDetails: '',
-          cash: 0,
-          card: 0,
-          upi: 0,
-          otherPayment: 0,
+          cash: '',
+          card: '',
+          upi: '',
+          otherPayment: '',
           roomNumber: ''
         });
 
@@ -445,10 +460,15 @@ const CreateBookingPage = () => {
               name="clientContact"
               value={formData.clientContact}
               onChange={handleInputChange}
-              pattern="[0-9]{10}"
+              maxLength={10}
+              inputMode="numeric"
+              placeholder="Enter 10 digit number"
               className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-50"
               required
             />
+            {formData.clientContact && formData.clientContact.length < 10 && (
+              <p className="text-xs text-orange-500 mt-1">{10 - formData.clientContact.length} more digits required</p>
+            )}
           </div>
           <div>
             <label className="block mb-2 text-zinc-900 dark:text-zinc-50">Client Name *</label>

@@ -31,12 +31,6 @@ const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
       access: ['admin', 'manager', 'employee']
     },
     {
-      title: 'Branches',
-      path: '/dashboard/branches',
-      icon: <Building2 className="w-5 h-5" />,
-      access: ['admin', 'manager']
-    },
-    {
       title: 'Users',
       path: '/dashboard/employees',
       icon: <Users className="w-5 h-5" />,
@@ -61,18 +55,6 @@ const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
       access: ['admin', 'manager', 'employee']
     },
     {
-      title: 'Clients',
-      path: '/dashboard/clients',
-      icon: <UserCircle className="w-5 h-5" />,
-      access: ['admin']
-    },
-    {
-      title: 'Expenses',
-      path: '/dashboard/expenses',
-      icon: <Receipt className="w-5 h-5" />,
-      access: ['admin', 'manager']
-    },
-    {
       title: 'Booking Report',
       path: '/dashboard/booking-report',
       icon: <CalendarDays className="w-5 h-5" />,
@@ -89,6 +71,30 @@ const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
       path: '/dashboard/analytics/employee',
       icon: <TrendingUp className="w-5 h-5" />,
       access: ['admin']
+    },
+    {
+      title: 'Expenses',
+      path: '/dashboard/expenses',
+      icon: <Receipt className="w-5 h-5" />,
+      access: ['admin', 'manager']
+    },
+    {
+      title: 'Expense Report',
+      path: '/dashboard/expense-report',
+      icon: <Receipt className="w-5 h-5" />,
+      access: ['admin', 'manager']
+    },
+    {
+      title: 'Clients',
+      path: '/dashboard/clients',
+      icon: <UserCircle className="w-5 h-5" />,
+      access: ['admin']
+    },
+    {
+      title: 'Branches',
+      path: '/dashboard/branches',
+      icon: <Building2 className="w-5 h-5" />,
+      access: ['admin', 'manager']
     },
     {
       title: 'Settings',
