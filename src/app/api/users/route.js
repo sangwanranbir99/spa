@@ -19,18 +19,18 @@ export async function GET(req) {
         let query = {};
         let users;
 
-        if (user.role === 'admin') {
-            // Admin can see all users (except other admins) or filter by branch
-            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+        if (user.role === 'superadmin' || user.role === 'admin') {
+            // Superadmin and Admin can see all users (except other superadmins/admins) or filter by branch
+            query.role = { $nin: ['superadmin', 'admin'] }; // Exclude superadmin and admin users from the list
 
             if (branchId && branchId !== 'null') {
                 query.branches = branchId;
             }
             users = await User.find(query).populate('branches');
         } else if (user.role === 'manager') {
-            // Manager can see users in their branch (excluding admins)
+            // Manager can see users in their branch (excluding superadmins and admins)
             const branchIds = user.branches.map(b => b._id || b);
-            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+            query.role = { $nin: ['superadmin', 'admin'] }; // Exclude superadmin and admin users from the list
 
             // If branchId is provided, verify manager has access to it
             if (branchId && branchId !== 'null') {
@@ -47,9 +47,9 @@ export async function GET(req) {
 
             users = await User.find(query).select('-password').populate('branches');
         } else if (user.role === 'employee') {
-            // Employee can see all staff in their branch (excluding admins)
+            // Employee can see all staff in their branch (excluding superadmins and admins)
             const branchIds = user.branches.map(b => b._id || b);
-            query.role = { $ne: 'admin' }; // Exclude admin users from the list
+            query.role = { $nin: ['superadmin', 'admin'] }; // Exclude superadmin and admin users from the list
 
             // If branchId is provided, verify employee has access to it
             if (branchId && branchId !== 'null') {
@@ -109,8 +109,8 @@ export async function POST(req) {
         }
 
         // Role-based creation logic
-        if (user.role === 'admin') {
-            // Admin can create any user with any branches
+        if (user.role === 'superadmin' || user.role === 'admin') {
+            // Superadmin and Admin can create any user with any branches
             const newUser = new User(userData);
             await newUser.save();
 

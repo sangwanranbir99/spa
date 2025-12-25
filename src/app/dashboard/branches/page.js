@@ -154,7 +154,7 @@ const BranchesPage = () => {
   );
 
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
-  const canCreateEdit = userRole === 'admin';
+  const canCreateEdit = userRole === 'superadmin';
 
   if (loading) {
     return (

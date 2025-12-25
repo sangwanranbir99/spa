@@ -48,10 +48,10 @@ export async function PUT(req, { params }) {
         const user = await authMiddleware(req);
         const { id } = await params;
 
-        // Only admin can update branches
-        if (!checkRole(user, 'admin')) {
+        // Only superadmin can update branches
+        if (!checkRole(user, 'superadmin')) {
             return NextResponse.json(
-                { message: 'Only admins can update branches' },
+                { message: 'Only superadmins can update branches' },
                 { status: 403 }
             );
         }
@@ -107,10 +107,10 @@ export async function DELETE(req, { params }) {
         const user = await authMiddleware(req);
         const { id } = await params;
 
-        // Only admin can delete branches
-        if (!checkRole(user, 'admin')) {
+        // Only superadmin can delete branches
+        if (!checkRole(user, 'superadmin')) {
             return NextResponse.json(
-                { message: 'Only admins can delete branches' },
+                { message: 'Only superadmins can delete branches' },
                 { status: 403 }
             );
         }

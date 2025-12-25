@@ -13,8 +13,8 @@ export async function GET(req) {
 
         let branches;
 
-        if (user.role === 'admin') {
-            // Admin can see all branches
+        if (user.role === 'superadmin' || user.role === 'admin') {
+            // Superadmin and Admin can see all branches
             branches = await Branch.find();
         } else if (user.role === 'manager' || user.role === 'employee') {
             // Manager and Employee can only see their assigned branches
@@ -50,10 +50,10 @@ export async function POST(req) {
 
         const user = await authMiddleware(req);
 
-        // Only admin can create branches
-        if (!checkRole(user, 'admin')) {
+        // Only superadmin can create branches
+        if (!checkRole(user, 'superadmin')) {
             return NextResponse.json(
-                { message: 'Only admins can create branches' },
+                { message: 'Only superadmins can create branches' },
                 { status: 403 }
             );
         }

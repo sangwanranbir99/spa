@@ -32,8 +32,8 @@ const EmployeesPage = () => {
       return;
     }
 
-    // Only admin and manager can access employees page
-    if (userRole !== 'admin' && userRole !== 'manager') {
+    // Only superadmin, admin and manager can access employees page
+    if (userRole !== 'superadmin' && userRole !== 'admin' && userRole !== 'manager') {
       router.push('/dashboard');
       return;
     }

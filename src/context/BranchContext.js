@@ -31,8 +31,8 @@ export function BranchProvider({ children }) {
 
     setUserRole(role);
 
-    if (role === 'admin') {
-      // Admin: Fetch ALL branches from the system
+    if (role === 'superadmin' || role === 'admin') {
+      // Superadmin and Admin: Fetch ALL branches from the system
       try {
         const response = await fetch('/api/branches', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -42,23 +42,29 @@ export function BranchProvider({ children }) {
           setUserBranches(allBranches);
           setTotalBranches(allBranches.length);
 
-          // Try to load previously selected branch or default to "All Branches"
-          const savedBranch = localStorage.getItem('selectedBranch');
-          if (savedBranch && savedBranch !== 'null') {
-            const parsed = JSON.parse(savedBranch);
-            // Verify the saved branch still exists in the system
-            const branchExists = allBranches.find(b => b._id === parsed._id);
-            if (branchExists) {
-              setSelectedBranch(parsed);
-            } else {
-              setSelectedBranch(null); // Branch no longer exists, default to all
-            }
+          // If only one branch exists, auto-select it
+          if (allBranches.length === 1) {
+            setSelectedBranch(allBranches[0]);
+            localStorage.setItem('selectedBranch', JSON.stringify(allBranches[0]));
           } else {
-            setSelectedBranch(null); // null means "All Branches" for admin
+            // Multiple branches: Try to load previously selected branch or default to "All Branches"
+            const savedBranch = localStorage.getItem('selectedBranch');
+            if (savedBranch && savedBranch !== 'null') {
+              const parsed = JSON.parse(savedBranch);
+              // Verify the saved branch still exists in the system
+              const branchExists = allBranches.find(b => b._id === parsed._id);
+              if (branchExists) {
+                setSelectedBranch(parsed);
+              } else {
+                setSelectedBranch(null); // Branch no longer exists, default to all
+              }
+            } else {
+              setSelectedBranch(null); // null means "All Branches" for superadmin/admin
+            }
           }
         }
       } catch (error) {
-        console.error('Error fetching branches for admin:', error);
+        console.error('Error fetching branches for superadmin/admin:', error);
       }
     } else {
       // Manager/Employee: Use assigned branches from localStorage
@@ -173,9 +179,9 @@ export function BranchProvider({ children }) {
     return selectedBranch._id;
   };
 
-  // Check if user can see all branches (admin with no branch selected)
+  // Check if user can see all branches (superadmin/admin with no branch selected)
   const canSeeAllBranches = () => {
-    return userRole === 'admin' && !selectedBranch;
+    return (userRole === 'superadmin' || userRole === 'admin') && !selectedBranch;
   };
 
   // Manual refresh function
