@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "VIP SMS - Management System",
+  title: "SMS - Management System",
   description: "VIP Spa Management System",
 };
 

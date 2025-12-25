@@ -82,7 +82,7 @@ const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
       title: 'Expense Report',
       path: '/dashboard/expense-report',
       icon: <Receipt className="w-5 h-5" />,
-      access: ['admin', 'manager']
+      access: ['admin']
     },
     {
       title: 'Clients',
@@ -94,7 +94,7 @@ const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
       title: 'Branches',
       path: '/dashboard/branches',
       icon: <Building2 className="w-5 h-5" />,
-      access: ['admin', 'manager']
+      access: ['superadmin']
     },
     {
       title: 'Settings',
@@ -136,7 +136,7 @@ const Sidebar = ({ isMobile = false, onLinkClick = () => {} }) => {
   return (
     <div className="hidden md:flex md:flex-col w-64 h-full bg-white border-r border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
       <div className="flex-shrink-0 p-6 border-b border-zinc-200 dark:border-zinc-800">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">VIP SMS</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">SMS</h1>
       </div>
       <nav className="flex-1 overflow-y-auto space-y-1 p-4">
         {filteredMenuItems.map((item) => (

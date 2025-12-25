@@ -31,12 +31,17 @@ export async function GET(req, { params }) {
             );
         }
 
-        // Fetch employees for this branch (exclude admin users)
-        const employees = await User.find({
+        // Fetch employees for this branch (exclude superadmin and admin users)
+        const employeeQuery = User.find({
             branches: { $in: [branchId] },
             status: true,
-            role: { $ne: 'admin' } // Exclude admin users
-        }).populate('branches').select('-password');
+            role: { $nin: ['superadmin', 'admin'] } // Exclude superadmin and admin users
+        }).populate('branches');
+
+        // Only superadmin and admin can see passwords
+        const employees = (user.role === 'superadmin' || user.role === 'admin')
+            ? await employeeQuery
+            : await employeeQuery.select('-password');
 
         // Fetch massages for this branch
         const massages = await Massage.find({

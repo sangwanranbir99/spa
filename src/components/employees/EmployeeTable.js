@@ -90,7 +90,7 @@ const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmplo
             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Username
             </th>
-            {role === 'admin' && (
+            {(role === 'superadmin' || role === 'admin') && (
               <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                 Password
               </th>
@@ -128,7 +128,7 @@ const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmplo
                   {employee.username}
                 </div>
               </td>
-              {role === 'admin' && (
+              {(role === 'superadmin' || role === 'admin') && (
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2">
                     <div className="text-sm text-zinc-700 dark:text-zinc-300 font-mono">
@@ -151,14 +151,18 @@ const EmployeeTable = ({ employees, onStatusChange, onRefreshNeeded, onEditEmplo
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    employee.role === 'admin'
+                    employee.role === 'superadmin'
+                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      : employee.role === 'admin'
                       ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                       : employee.role === 'manager'
                       ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                   }`}
                 >
-                  {employee.role === 'admin'
+                  {employee.role === 'superadmin'
+                    ? 'Super Admin'
+                    : employee.role === 'admin'
                     ? 'Admin'
                     : employee.role === 'manager'
                     ? 'Manager'

@@ -75,7 +75,7 @@ const DashboardLayout = ({ children }) => {
       }`}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between flex-shrink-0 p-6 border-b border-zinc-200 dark:border-zinc-800">
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">VIP SMS</h1>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">SMS</h1>
             <button
               onClick={() => setShowMobileSidebar(false)}
               className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
@@ -105,14 +105,14 @@ const DashboardLayout = ({ children }) => {
                   <Menu className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
                 </button>
 
-                {(userRole === 'admin' || userRole === 'manager') && userBranches.length > 0 && branchMounted && (
+                {(userRole === 'superadmin' || userRole === 'admin' || userRole === 'manager') && userBranches.length > 0 && branchMounted && (
                   <div className="relative">
                     <button
                       onClick={() => setShowBranchDropdown(!showBranchDropdown)}
                       className="flex items-center space-x-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                     >
                       <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                        {selectedBranch ? selectedBranch.name : (userRole === 'admin' ? 'All Branches' : 'Select Branch')}
+                        {selectedBranch ? selectedBranch.name : ((userRole === 'superadmin' || userRole === 'admin') ? 'All Branches' : 'Select Branch')}
                       </span>
                       <ChevronDown className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
                     </button>
@@ -121,7 +121,7 @@ const DashboardLayout = ({ children }) => {
                     {showBranchDropdown && (
                       <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 z-50">
                         <div className="p-2">
-                          {userRole === 'admin' && (
+                          {(userRole === 'superadmin' || userRole === 'admin') && userBranches.length > 1 && (
                             <div
                               onClick={handleClearBranch}
                               className="px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md cursor-pointer"
